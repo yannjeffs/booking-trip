@@ -1,0 +1,33 @@
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-md mx-auto px-4 py-8">
+    <p class="text-base font-medium text-gray-900 mb-4">Mes réservations</p>
+
+    <p *ngIf="chargement" class="text-sm text-gray-400 text-center py-6">Chargement...</p>
+
+    <div class="space-y-3">
+      <a
+        *ngFor="let r of reservations"
+        [routerLink]="['/tickets', r.code_alphanumerique]"
+        class="block bg-white rounded-2xl border border-gray-200 p-4 shadow-sm hover:border-gray-300 transition-colors"
+      >
+        <div class="flex justify-between items-start mb-2.5">
+          <span class="text-[11px] font-medium px-2 py-0.5 rounded-full" [ngClass]="classeStatut(r.statut)">
+            {{ libelleStatut(r.statut) }}
+          </span>
+          <span class="text-[11px] text-gray-400">{{ r.code_alphanumerique }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="text-sm font-medium">{{ r.trajet }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">{{ r.date_heure_depart | date:'dd/MM HH:mm' }} · {{ r.classe }}</p>
+          </div>
+          <i class="ti ti-chevron-right text-gray-400"></i>
+        </div>
+      </a>
+
+      <p *ngIf="!chargement && reservations.length === 0" class="text-sm text-gray-400 text-center py-6">
+        Aucune réservation pour le moment.
+      </p>
+    </div>
+  </div>
+</div>

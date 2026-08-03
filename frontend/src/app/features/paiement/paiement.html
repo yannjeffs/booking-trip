@@ -1,0 +1,58 @@
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-md mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm" *ngIf="reservation as r">
+      <p class="text-base font-medium text-gray-900 mb-4">Paiement</p>
+
+      <div class="bg-gray-50 rounded-lg px-3 py-2.5 mb-4 text-sm">
+        <div class="flex justify-between text-gray-600 mb-1">
+          <span>{{ r.trajet }}</span>
+          <span>{{ r.date_heure_depart | date:'dd/MM HH:mm' }}</span>
+        </div>
+        <div class="flex justify-between font-medium">
+          <span class="text-gray-600 font-normal">{{ r.classe }}</span>
+          <span>{{ r.montant_total }} FCFA</span>
+        </div>
+      </div>
+
+      <p class="text-xs text-gray-500 mb-2">Mode de paiement</p>
+      <div class="space-y-2 mb-4">
+        <label class="flex items-center gap-2.5 border rounded-lg px-3 py-2.5 cursor-pointer"
+               [class.border-gray-300]="provider !== 'orange_money'"
+               [style.borderColor]="provider === 'orange_money' ? 'var(--color-primary)' : null"
+               [style.background]="provider === 'orange_money' ? '#fef2f2' : null">
+          <input type="radio" name="provider" value="orange_money" [(ngModel)]="provider" />
+          <i class="ti ti-device-mobile text-gray-500"></i>
+          <span class="text-sm font-medium">Orange Money</span>
+        </label>
+        <label class="flex items-center gap-2.5 border border-gray-300 rounded-lg px-3 py-2.5 cursor-pointer">
+          <input type="radio" name="provider" value="mtn_momo" [(ngModel)]="provider" />
+          <i class="ti ti-device-mobile text-gray-500"></i>
+          <span class="text-sm font-medium">MTN Mobile Money</span>
+        </label>
+        <label class="flex items-center gap-2.5 border border-gray-300 rounded-lg px-3 py-2.5 cursor-pointer">
+          <input type="radio" name="provider" value="carte_bancaire" [(ngModel)]="provider" />
+          <i class="ti ti-credit-card text-gray-500"></i>
+          <span class="text-sm font-medium">Carte bancaire</span>
+        </label>
+      </div>
+
+      <div class="mb-4" *ngIf="provider !== 'carte_bancaire'">
+        <label class="text-xs text-gray-500 block mb-1">Numéro de téléphone</label>
+        <input type="tel" [(ngModel)]="numeroTelephone" placeholder="6XX XXX XXX"
+               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+      </div>
+
+      <p *ngIf="erreur" class="text-sm text-red-600 mb-3">{{ erreur }}</p>
+
+      <div class="flex justify-between items-baseline border-t border-gray-200 pt-3 mb-4">
+        <span class="text-sm text-gray-500">Total</span>
+        <span class="text-xl font-semibold">{{ r.montant_total }} FCFA</span>
+      </div>
+
+      <button (click)="payer()" [disabled]="envoiEnCours"
+              class="w-full bg-(--color-primary) hover:bg-(--color-primary-dark) disabled:opacity-50 text-white font-medium rounded-lg py-2.5 transition-colors">
+        <i class="ti ti-lock mr-1"></i> {{ envoiEnCours ? 'Traitement...' : 'Payer ' + r.montant_total + ' FCFA' }}
+      </button>
+    </div>
+  </div>
+</div>

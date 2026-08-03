@@ -1,0 +1,12 @@
+/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+
+/* Palette CX Ticketing - à ajuster selon la charte de la compagnie */
+:root {
+  --color-primary: #d80010;
+  --color-primary-dark: #a5000c;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+}

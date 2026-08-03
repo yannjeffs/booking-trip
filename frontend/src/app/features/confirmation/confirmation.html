@@ -1,0 +1,43 @@
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-md mx-auto px-4 py-8" *ngIf="reservation as r">
+    <div class="text-center mb-4">
+      <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
+        <i class="ti ti-check text-green-600 text-xl"></i>
+      </div>
+      <p class="font-medium text-gray-900">Réservation confirmée</p>
+      <p class="text-sm text-gray-500">Billet envoyé par SMS et WhatsApp</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+      <div class="p-5 text-center">
+        <canvas #qrCanvas class="mx-auto mb-3"></canvas>
+        <p class="text-xs text-gray-400 tracking-wide">N° BILLET {{ r.code_alphanumerique }}</p>
+      </div>
+
+      <div class="border-t border-dashed border-gray-300"></div>
+
+      <div class="p-4">
+        <div class="flex justify-between mb-3">
+          <div>
+            <p class="text-[11px] text-gray-400">Trajet</p>
+            <p class="text-sm font-medium">{{ r.trajet }}</p>
+          </div>
+          <i class="ti ti-arrow-right text-gray-400 mt-3"></i>
+          <div class="text-right">
+            <p class="text-[11px] text-gray-400">Départ</p>
+            <p class="text-sm font-medium">{{ r.date_heure_depart | date:'dd/MM/yyyy HH:mm' }}</p>
+          </div>
+        </div>
+
+        <table class="w-full text-sm border-t border-gray-200 pt-2">
+          <tr><td class="text-gray-500 py-1">Classe</td><td class="text-right">{{ r.classe }}</td></tr>
+          <tr><td class="text-gray-500 py-1">Statut</td><td class="text-right">{{ r.statut }}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <a routerLink="/mes-reservations" class="block text-center mt-4 text-sm text-gray-500 hover:text-gray-700">
+      Voir mes réservations
+    </a>
+  </div>
+</div>

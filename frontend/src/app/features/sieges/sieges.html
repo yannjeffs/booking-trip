@@ -1,0 +1,58 @@
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-md mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+      <p class="text-base font-medium text-gray-900">Choisissez vos sièges</p>
+      <p class="text-sm text-gray-500 mb-4">Vol {{ voyageId }}</p>
+
+      <div class="flex gap-4 text-xs text-gray-500 mb-4">
+        <span class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-sm border border-gray-300 bg-white inline-block"></span> Libre
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-sm inline-block" style="background: var(--color-primary)"></span> Sélectionné
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-sm bg-gray-400 inline-block"></span> Occupé
+        </span>
+      </div>
+
+      <div class="flex justify-end mb-2 text-gray-400">
+        <i class="ti ti-steering-wheel text-lg"></i>
+      </div>
+
+      <p *ngIf="chargement" class="text-sm text-gray-400 text-center py-6">Chargement du plan de sièges...</p>
+
+      <div *ngIf="!chargement" class="grid grid-cols-4 gap-2 justify-items-center mb-4">
+        <button
+          *ngFor="let siege of sieges"
+          (click)="basculerSiege(siege)"
+          [disabled]="siege.statut === 'occupe'"
+          class="w-9 h-9 text-[10px] rounded-md border transition-colors"
+          [class.bg-white]="siege.statut === 'libre' && !estSelectionne(siege.numero)"
+          [class.border-gray-300]="siege.statut === 'libre' && !estSelectionne(siege.numero)"
+          [class.bg-gray-400]="siege.statut === 'occupe'"
+          [class.text-white]="siege.statut === 'occupe' || estSelectionne(siege.numero)"
+          [class.border-none]="siege.statut === 'occupe'"
+          [style.background]="estSelectionne(siege.numero) ? 'var(--color-primary)' : null"
+        >
+          {{ siege.numero }}
+        </button>
+      </div>
+
+      <p *ngIf="erreur" class="text-sm text-red-600 mb-3">{{ erreur }}</p>
+
+      <div class="border-t border-gray-200 pt-3 flex justify-between items-center">
+        <div>
+          <p class="text-xs text-gray-500">Sièges: {{ siegesSelectionnes.join(', ') || '—' }}</p>
+        </div>
+        <button
+          (click)="continuer()"
+          [disabled]="siegesSelectionnes.length === 0 || envoiEnCours"
+          class="bg-(--color-primary) hover:bg-(--color-primary-dark) disabled:opacity-40 text-white font-medium rounded-lg px-4 py-2.5 transition-colors"
+        >
+          {{ envoiEnCours ? 'Envoi...' : 'Continuer' }} <i class="ti ti-arrow-right ml-1"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
