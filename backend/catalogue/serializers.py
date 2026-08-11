@@ -15,11 +15,9 @@ class ClasseSerializer(serializers.ModelSerializer):
 
 
 class TarifSerializer(serializers.ModelSerializer):
-    classe = ClasseSerializer(read_only=True)
-
     class Meta:
         model = Tarif
-        fields = ['id', 'classe', 'prix_adulte', 'prix_enfant']
+        fields = ['id', 'prix_adulte', 'prix_enfant']
 
 
 class TrajetSerializer(serializers.ModelSerializer):
@@ -32,14 +30,15 @@ class TrajetSerializer(serializers.ModelSerializer):
 
 
 class VoyageListSerializer(serializers.ModelSerializer):
-    """Utilisé pour les résultats de recherche : léger, avec tarifs et places restantes."""
+    """Utilisé pour les résultats de recherche : léger, avec tarif et places restantes."""
     trajet = TrajetSerializer(read_only=True)
-    tarifs = TarifSerializer(many=True, read_only=True)
+    tarif = TarifSerializer(read_only=True)
+    classe = ClasseSerializer(read_only=True)
     places_disponibles = serializers.SerializerMethodField()
 
     class Meta:
         model = Voyage
-        fields = ['id', 'trajet', 'bus', 'date_heure_depart', 'statut', 'tarifs', 'places_disponibles']
+        fields = ['id', 'trajet', 'bus', 'classe', 'date_heure_depart', 'statut', 'tarif', 'places_disponibles']
 
     def get_places_disponibles(self, voyage):
         from reservations.utils import get_sieges_disponibles

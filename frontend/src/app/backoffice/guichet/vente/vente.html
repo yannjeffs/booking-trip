@@ -1,0 +1,99 @@
+<div class="max-w-5xl mx-auto px-6 py-8">
+  <p class="text-lg font-semibold text-gray-900 mb-6">Vente de billet — guichet</p>
+
+  <div *ngIf="billetVendu" class="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+    <p class="text-sm font-medium text-green-800"><i class="ti ti-check mr-1"></i> Billet {{ billetVendu.code_alphanumerique }} vendu et confirmé.</p>
+    <p class="text-xs text-green-700 mt-1">{{ billetVendu.trajet }} · {{ billetVendu.montant_total }} FCFA</p>
+  </div>
+
+  <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-6">
+    <div class="flex gap-4 items-end">
+      <div>
+        <label class="text-xs text-gray-500 block mb-1">Nom du client</label>
+        <input [(ngModel)]="clientNom" class="rounded-lg border border-gray-300 px-3 py-2 text-sm w-56" />
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 block mb-1">Téléphone</label>
+        <input [(ngModel)]="clientTelephone" placeholder="6XX XXX XXX" class="rounded-lg border border-gray-300 px-3 py-2 text-sm w-40" />
+      </div>
+      <div class="flex gap-2 ml-auto">
+        <button (click)="type = 'aller_simple'" class="text-xs border rounded-full px-3 py-1.5"
+                [style.borderColor]="type === 'aller_simple' ? 'var(--color-primary)' : '#d1d5db'"
+                [style.color]="type === 'aller_simple' ? 'var(--color-primary)' : '#374151'">Aller simple</button>
+        <button (click)="type = 'aller_retour'" class="text-xs border rounded-full px-3 py-1.5"
+                [style.borderColor]="type === 'aller_retour' ? 'var(--color-primary)' : '#d1d5db'"
+                [style.color]="type === 'aller_retour' ? 'var(--color-primary)' : '#374151'">Aller-retour</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-6">
+    <div class="bg-white rounded-2xl border border-gray-200 p-5">
+      <p class="text-sm font-medium text-gray-900 mb-3">1. Voyage aller</p>
+      <p *ngIf="chargementVoyages" class="text-sm text-gray-400">Chargement...</p>
+      <div class="space-y-2 max-h-72 overflow-y-auto">
+        <button *ngFor="let v of voyages" (click)="choisirVoyage(v)"
+                class="w-full text-left border rounded-lg px-3 py-2.5 text-sm transition-colors"
+                [class.border-gray-200]="voyageSelectionne?.id !== v.id"
+                [style.borderColor]="voyageSelectionne?.id === v.id ? 'var(--color-primary)' : null">
+          <div class="flex justify-between">
+            <span class="font-medium">{{ v.trajet.depart.ville }} → {{ v.trajet.arrivee.ville }}</span>
+            <span class="text-xs text-gray-500">{{ v.classe.nom }} · {{ v.tarif.prix_adulte }} FCFA</span>
+          </div>
+          <p class="text-xs text-gray-500">{{ v.date_heure_depart | date:'dd/MM HH:mm' }} · {{ v.places_disponibles }} places</p>
+        </button>
+      </div>
+
+      <ng-container *ngIf="voyageSelectionne">
+        <p class="text-xs text-gray-500 mt-4 mb-2">Sièges (aller)</p>
+        <p *ngIf="chargementSieges" class="text-sm text-gray-400">Chargement...</p>
+        <div *ngIf="!chargementSieges" class="grid grid-cols-6 gap-1.5 justify-items-center">
+          <button *ngFor="let s of siegesAller" (click)="basculerSiegeAller(s)" [disabled]="s.statut === 'occupe'"
+                  class="w-8 h-8 text-[10px] rounded-md border"
+                  [class.bg-gray-400]="s.statut === 'occupe'"
+                  [class.text-white]="s.statut === 'occupe' || siegesAllerSelectionnes.includes(s.numero)"
+                  [style.background]="siegesAllerSelectionnes.includes(s.numero) ? 'var(--color-primary)' : null">
+            {{ s.numero }}
+          </button>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-200 p-5" *ngIf="type === 'aller_retour' && voyageSelectionne">
+      <p class="text-sm font-medium text-gray-900 mb-3">2. Voyage retour</p>
+      <div class="space-y-2 max-h-72 overflow-y-auto">
+        <button *ngFor="let v of voyagesRetour" (click)="choisirVoyageRetour(v)"
+                class="w-full text-left border rounded-lg px-3 py-2.5 text-sm transition-colors"
+                [class.border-gray-200]="voyageRetourSelectionne?.id !== v.id"
+                [style.borderColor]="voyageRetourSelectionne?.id === v.id ? 'var(--color-primary)' : null">
+          <div class="flex justify-between">
+            <span class="font-medium">{{ v.trajet.depart.ville }} → {{ v.trajet.arrivee.ville }}</span>
+            <span class="text-xs text-gray-500">{{ v.classe.nom }} · {{ v.tarif.prix_adulte }} FCFA</span>
+          </div>
+          <p class="text-xs text-gray-500">{{ v.date_heure_depart | date:'dd/MM HH:mm' }} · {{ v.places_disponibles }} places</p>
+        </button>
+        <p *ngIf="!voyagesRetour.length" class="text-sm text-gray-400">Aucun voyage retour disponible après l'aller.</p>
+      </div>
+
+      <ng-container *ngIf="voyageRetourSelectionne">
+        <p class="text-xs text-gray-500 mt-4 mb-2">Sièges (retour)</p>
+        <div class="grid grid-cols-6 gap-1.5 justify-items-center">
+          <button *ngFor="let s of siegesRetour" (click)="basculerSiegeRetour(s)" [disabled]="s.statut === 'occupe'"
+                  class="w-8 h-8 text-[10px] rounded-md border"
+                  [class.bg-gray-400]="s.statut === 'occupe'"
+                  [class.text-white]="s.statut === 'occupe' || siegesRetourSelectionnes.includes(s.numero)"
+                  [style.background]="siegesRetourSelectionnes.includes(s.numero) ? 'var(--color-primary)' : null">
+            {{ s.numero }}
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <p *ngIf="erreur" class="text-sm text-red-600 mt-4">{{ erreur }}</p>
+
+  <button *ngIf="voyageSelectionne" (click)="vendre()" [disabled]="!pretAVendre || envoiEnCours"
+          class="w-full mt-4 bg-(--color-primary) hover:bg-(--color-primary-dark) disabled:opacity-40 text-white font-medium rounded-lg py-2.5">
+    {{ envoiEnCours ? 'Encaissement...' : 'Confirmer la vente (cash)' }}
+  </button>
+</div>

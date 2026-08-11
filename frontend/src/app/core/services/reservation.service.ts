@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreerReservationPayload, Reservation } from '../models/models';
+import { CreerReservationPayload, Reservation, ProgrammeFidelite } from '../models/models';
 
 @Injectable({ providedIn: 'root' })
 export class ReservationService {
@@ -30,5 +30,9 @@ export class ReservationService {
 
   mesReservations(): Observable<{ results: Reservation[] }> {
     return this.http.get<{ results: Reservation[] }>(`${this.base}/reservations/mes-reservations/`);
+  }
+
+  maFidelite(): Observable<ProgrammeFidelite> {
+    return this.http.get<ProgrammeFidelite>(`${this.base}/fidelite/moi/`);
   }
 }

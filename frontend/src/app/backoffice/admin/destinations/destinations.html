@@ -1,0 +1,34 @@
+<!-- backoffice/admin/destinations/destinations.html -->
+<div class="max-w-3xl mx-auto px-6 py-8">
+  <p class="text-lg font-semibold text-gray-900 mb-6">Destinations</p>
+  <div class="grid grid-cols-3 gap-6">
+    <div class="col-span-2 bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50"><th class="px-4 py-2 font-normal">Ville</th><th class="px-4 py-2 font-normal">Région</th><th class="px-4 py-2"></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let d of destinations" class="border-b border-gray-50">
+            <td class="px-4 py-2.5">{{ d.ville }}</td>
+            <td class="px-4 py-2.5 text-gray-500">{{ d.region }}</td>
+            <td class="px-4 py-2.5 text-right space-x-2">
+              <button (click)="ouvrirEdition(d)" class="text-gray-400 hover:text-gray-700"><i class="ti ti-pencil"></i></button>
+              <button (click)="supprimer(d)" class="text-gray-400 hover:text-red-600"><i class="ti ti-trash"></i></button>
+            </td>
+          </tr>
+          <tr *ngIf="!chargement && destinations.length === 0"><td colspan="3" class="px-4 py-6 text-center text-gray-400">Aucune destination.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-200 p-4 h-fit">
+      <p class="text-sm font-medium text-gray-900 mb-3">{{ enEdition ? 'Modifier' : 'Ajouter' }}</p>
+      <div class="space-y-3">
+        <div><label class="text-xs text-gray-500 block mb-1">Ville</label><input [(ngModel)]="formulaire.ville" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" /></div>
+        <div><label class="text-xs text-gray-500 block mb-1">Région</label><input [(ngModel)]="formulaire.region" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" /></div>
+        <p *ngIf="erreur" class="text-xs text-red-600">{{ erreur }}</p>
+        <div class="flex gap-2">
+          <button (click)="enregistrer()" class="flex-1 bg-(--color-primary) text-white text-sm font-medium rounded-lg py-2">Enregistrer</button>
+          <button *ngIf="enEdition" (click)="ouvrirCreation()" class="text-sm text-gray-500">Annuler</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

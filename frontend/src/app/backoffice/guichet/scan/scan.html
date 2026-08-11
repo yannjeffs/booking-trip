@@ -1,0 +1,23 @@
+<!-- backoffice/guichet/scan/scan.html -->
+<div class="max-w-md mx-auto px-6 py-8">
+  <p class="text-lg font-semibold text-gray-900 mb-6">Scan à l'embarquement</p>
+
+  <div class="bg-white rounded-2xl border border-gray-200 p-5">
+    <label class="text-xs text-gray-500 block mb-1">Code du billet (ou scan QR via douchette)</label>
+    <input #champCode [(ngModel)]="code" (keyup.enter)="valider()" type="text" autofocus placeholder="CX7K29A1"
+           class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-mono tracking-wide focus:outline-none focus:ring-2 focus:ring-(--color-primary)" />
+    <button (click)="valider()" [disabled]="chargement"
+            class="w-full mt-3 bg-(--color-primary) hover:bg-(--color-primary-dark) disabled:opacity-50 text-white font-medium rounded-lg py-2.5">
+      {{ chargement ? 'Vérification...' : "Valider l'embarquement" }}
+    </button>
+  </div>
+
+  <div *ngIf="resultat" class="mt-4 rounded-xl p-4 border" [class.bg-green-50]="resultat.valide" [class.border-green-200]="resultat.valide" [class.bg-red-50]="!resultat.valide" [class.border-red-200]="!resultat.valide">
+    <p class="text-sm font-medium" [class.text-green-800]="resultat.valide" [class.text-red-800]="!resultat.valide">
+      <i class="ti" [class.ti-check]="resultat.valide" [class.ti-x]="!resultat.valide"></i>
+      {{ resultat.valide ? 'Embarquement validé' : 'Refusé' }}
+    </p>
+    <p *ngIf="resultat.motif" class="text-xs mt-1" [class.text-green-700]="resultat.valide" [class.text-red-700]="!resultat.valide">{{ resultat.motif }}</p>
+    <p *ngIf="resultat.reservation as r" class="text-xs text-gray-600 mt-2">{{ r.trajet }} · {{ r.classe }} · {{ r.code_alphanumerique }}</p>
+  </div>
+</div>

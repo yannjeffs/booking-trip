@@ -1,0 +1,94 @@
+<div class="max-w-5xl mx-auto px-6 py-8">
+  <p class="text-lg font-semibold text-gray-900 mb-6">Voyages & tarifs</p>
+
+  <div class="grid grid-cols-3 gap-6 mb-6">
+    <div class="bg-white rounded-2xl border border-gray-200 p-4">
+      <p class="text-sm font-medium text-gray-900 mb-3">Programmer un départ</p>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs text-gray-500 block mb-1">Trajet</label>
+          <select [(ngModel)]="formulaireVoyage.trajet" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+            <option [ngValue]="null">Choisir</option>
+            <option *ngFor="let t of trajets" [ngValue]="t.id">{{ t.depart.ville }} → {{ t.arrivee.ville }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 block mb-1">Bus (fixe la classe du voyage)</label>
+          <select [(ngModel)]="formulaireVoyage.bus" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+            <option [ngValue]="null">Choisir</option>
+            <option *ngFor="let b of busListe" [ngValue]="b.id">{{ b.immatriculation }} · {{ nomClasse(b.classe) }} ({{ b.capacite }} places)</option>
+          </select>
+        </div>
+        <div class="flex gap-2">
+          <div class="flex-1">
+            <label class="text-xs text-gray-500 block mb-1">Date</label>
+            <input type="date" [(ngModel)]="formulaireVoyage.date" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+          </div>
+          <div class="flex-1">
+            <label class="text-xs text-gray-500 block mb-1">Heure</label>
+            <input type="time" [(ngModel)]="formulaireVoyage.heure" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+          </div>
+        </div>
+        <p *ngIf="erreur" class="text-xs text-red-600">{{ erreur }}</p>
+        <button (click)="creerVoyage()" class="w-full bg-(--color-primary) text-white text-sm font-medium rounded-lg py-2">
+          Programmer
+        </button>
+      </div>
+    </div>
+
+    <div class="col-span-2 bg-white rounded-2xl border border-gray-200 p-4" *ngIf="voyageSelectionnePourTarif as v">
+      <div class="flex justify-between items-center mb-3">
+        <p class="text-sm font-medium text-gray-900">
+          Tarif — {{ nomTrajet(v.trajet) }} · {{ nomClasse(v.classe_id) }} · {{ v.date_heure_depart | date:'dd/MM HH:mm' }}
+        </p>
+        <button (click)="voyageSelectionnePourTarif = null" class="text-xs text-gray-400 hover:text-gray-600">Fermer</button>
+      </div>
+
+      <div class="flex gap-3 items-end">
+        <div class="flex-1">
+          <label class="text-xs text-gray-500 block mb-1">Prix adulte (FCFA)</label>
+          <input type="number" [(ngModel)]="formulaireTarif.prix_adulte" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+        </div>
+        <div class="flex-1">
+          <label class="text-xs text-gray-500 block mb-1">Prix enfant (≤ 12 ans, FCFA)</label>
+          <input type="number" [(ngModel)]="formulaireTarif.prix_enfant" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+        </div>
+        <button (click)="enregistrerTarif()" class="bg-gray-900 text-white text-sm rounded-lg px-4 py-2">
+          {{ v.tarif ? 'Mettre à jour' : 'Créer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
+          <th class="px-4 py-2 font-normal">Trajet</th>
+          <th class="px-4 py-2 font-normal">Bus / Classe</th>
+          <th class="px-4 py-2 font-normal">Départ</th>
+          <th class="px-4 py-2 font-normal">Tarif</th>
+          <th class="px-4 py-2"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let v of voyages" class="border-b border-gray-50">
+          <td class="px-4 py-2.5 font-medium">{{ nomTrajet(v.trajet) }}</td>
+          <td class="px-4 py-2.5 text-gray-500">{{ immatriculationBus(v.bus) }} · {{ nomClasse(v.classe_id) }}</td>
+          <td class="px-4 py-2.5 text-gray-500">{{ v.date_heure_depart | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td class="px-4 py-2.5">
+            <button (click)="ouvrirTarif(v)" class="text-xs border border-gray-300 rounded-full px-2.5 py-1 hover:border-gray-400">
+              {{ v.tarif ? v.tarif.prix_adulte + ' FCFA' : 'Non défini' }}
+            </button>
+          </td>
+          <td class="px-4 py-2.5 text-right">
+            <button (click)="supprimerVoyage(v)" class="text-gray-400 hover:text-red-600"><i class="ti ti-trash"></i></button>
+          </td>
+        </tr>
+        <tr *ngIf="!chargement && voyages.length === 0">
+          <td colspan="5" class="px-4 py-6 text-center text-gray-400">Aucun voyage programmé.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

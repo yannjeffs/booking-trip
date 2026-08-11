@@ -1,0 +1,42 @@
+<!-- backoffice/admin/dashboard/dashboard.html -->
+<div class="max-w-4xl mx-auto px-6 py-8">
+  <p class="text-lg font-semibold text-gray-900 mb-6">Tableau de bord</p>
+
+  <div *ngIf="stats as s" class="grid grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-2xl border border-gray-200 p-4">
+      <p class="text-xs text-gray-500 mb-1">Voyages aujourd'hui</p>
+      <p class="text-2xl font-semibold">{{ s.voyages_aujourd_hui }}</p>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-200 p-4">
+      <p class="text-xs text-gray-500 mb-1">Réservations confirmées</p>
+      <p class="text-2xl font-semibold">{{ s.reservations_confirmees_total }}</p>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-200 p-4">
+      <p class="text-xs text-gray-500 mb-1">Chiffre d'affaires</p>
+      <p class="text-2xl font-semibold">{{ s.chiffre_affaires_total }} FCFA</p>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-200 p-4">
+      <p class="text-xs text-gray-500 mb-1">En attente de paiement</p>
+      <p class="text-2xl font-semibold">{{ s.reservations_en_attente }}</p>
+    </div>
+  </div>
+
+  <div *ngIf="stats as s" class="bg-white rounded-2xl border border-gray-200 p-5">
+    <p class="text-sm font-medium text-gray-900 mb-3">Ventes par canal</p>
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-xs text-gray-400 border-b border-gray-100">
+          <th class="pb-2 font-normal">Canal</th><th class="pb-2 font-normal">Nombre</th><th class="pb-2 font-normal">Montant</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let ligne of s.ventes_par_canal" class="border-b border-gray-50">
+          <td class="py-2">{{ ligne.canal === 'en_ligne' ? 'En ligne' : 'Guichet' }}</td>
+          <td class="py-2">{{ ligne.nombre }}</td>
+          <td class="py-2">{{ ligne.montant }} FCFA</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="text-xs text-gray-400 mt-3">Paiements échoués (7 derniers jours) : {{ s.paiements_echoues_7j }}</p>
+  </div>
+</div>

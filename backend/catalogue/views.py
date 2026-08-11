@@ -6,14 +6,12 @@ from .serializers import DestinationSerializer, ClasseSerializer, VoyageListSeri
 
 
 class DestinationViewSet(viewsets.ReadOnlyModelViewSet):
-    """GET /api/destinations/  GET /api/destinations/{id}/"""
     queryset = Destination.objects.all()
     serializer_class = DestinationSerializer
     permission_classes = [permissions.AllowAny]
 
 
 class ClasseViewSet(viewsets.ReadOnlyModelViewSet):
-    """GET /api/classes/"""
     queryset = Classe.objects.all()
     serializer_class = ClasseSerializer
     permission_classes = [permissions.AllowAny]
@@ -28,8 +26,7 @@ class VoyageRechercheView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        qs = Voyage.objects.select_related('trajet', 'trajet__depart', 'trajet__arrivee', 'bus') \
-                            .prefetch_related('tarifs__classe') \
+        qs = Voyage.objects.select_related('trajet', 'trajet__depart', 'trajet__arrivee', 'bus', 'bus__classe', 'tarif') \
                             .filter(statut='planifie')
         depart = self.request.query_params.get('depart')
         arrivee = self.request.query_params.get('arrivee')
@@ -43,7 +40,7 @@ class VoyageRechercheView(generics.ListAPIView):
         if date:
             qs = qs.filter(date_heure_depart__date=date)
         if classe:
-            qs = qs.filter(tarifs__classe_id=classe)
+            qs = qs.filter(bus__classe_id=classe)
         return qs.distinct()
 
 

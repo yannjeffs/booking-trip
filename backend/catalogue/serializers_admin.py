@@ -1,3 +1,4 @@
+# catalogue/serializers_admin.py
 from rest_framework import serializers
 from .models import Destination, Classe, Bus, Trajet, Voyage, Tarif
 
@@ -17,7 +18,7 @@ class ClasseAdminSerializer(serializers.ModelSerializer):
 class BusAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bus
-        fields = ['id', 'immatriculation', 'capacite', 'plan_sieges', 'actif']
+        fields = ['id', 'immatriculation', 'capacite', 'plan_sieges', 'classe', 'actif']
 
 
 class TrajetAdminSerializer(serializers.ModelSerializer):
@@ -29,12 +30,13 @@ class TrajetAdminSerializer(serializers.ModelSerializer):
 class TarifAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tarif
-        fields = ['id', 'voyage', 'classe', 'prix_adulte', 'prix_enfant']
+        fields = ['id', 'voyage', 'prix_adulte', 'prix_enfant']
 
 
 class VoyageAdminSerializer(serializers.ModelSerializer):
-    tarifs = TarifAdminSerializer(many=True, read_only=True)
+    tarif = TarifAdminSerializer(read_only=True)
+    classe_id = serializers.IntegerField(source='bus.classe_id', read_only=True)
 
     class Meta:
         model = Voyage
-        fields = ['id', 'trajet', 'bus', 'date_heure_depart', 'statut', 'tarifs']
+        fields = ['id', 'trajet', 'bus', 'classe_id', 'date_heure_depart', 'statut', 'tarif']

@@ -1,0 +1,37 @@
+<!-- backoffice/admin/bus/bus.html -->
+<div class="max-w-3xl mx-auto px-6 py-8">
+  <p class="text-lg font-semibold text-gray-900 mb-6">Bus</p>
+  <div class="grid grid-cols-3 gap-6">
+    <div class="col-span-2 bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50"><th class="px-4 py-2 font-normal">Immatriculation</th><th class="px-4 py-2 font-normal">Capacité</th><th class="px-4 py-2 font-normal">Actif</th><th class="px-4 py-2"></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let b of busListe" class="border-b border-gray-50">
+            <td class="px-4 py-2.5 font-medium">{{ b.immatriculation }}</td>
+            <td class="px-4 py-2.5 text-gray-500">{{ b.capacite }} places</td>
+            <td class="px-4 py-2.5">
+              <button (click)="basculerActif(b)" class="text-xs px-2 py-0.5 rounded-full" [class.bg-green-100]="b.actif" [class.text-green-700]="b.actif" [class.bg-gray-100]="!b.actif" [class.text-gray-500]="!b.actif">
+                {{ b.actif ? 'Actif' : 'Inactif' }}
+              </button>
+            </td>
+            <td class="px-4 py-2.5 text-right"><button (click)="supprimer(b)" class="text-gray-400 hover:text-red-600"><i class="ti ti-trash"></i></button></td>
+          </tr>
+          <tr *ngIf="!chargement && busListe.length === 0"><td colspan="4" class="px-4 py-6 text-center text-gray-400">Aucun bus.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-200 p-4 h-fit">
+      <p class="text-sm font-medium text-gray-900 mb-3">Ajouter un bus</p>
+      <div class="space-y-3">
+        <div><label class="text-xs text-gray-500 block mb-1">Immatriculation</label><input [(ngModel)]="formulaire.immatriculation" placeholder="CX-103" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" /></div>
+        <div class="flex gap-2">
+          <div class="flex-1"><label class="text-xs text-gray-500 block mb-1">Rangées</label><input type="number" [(ngModel)]="formulaire.rangees" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" /></div>
+          <div class="flex-1"><label class="text-xs text-gray-500 block mb-1">Colonnes</label><input [(ngModel)]="formulaire.colonnes" placeholder="A,B,C,D" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" /></div>
+        </div>
+        <p class="text-xs text-gray-400">Capacité calculée : {{ capacite() }} places</p>
+        <p *ngIf="erreur" class="text-xs text-red-600">{{ erreur }}</p>
+        <button (click)="creer()" class="w-full bg-(--color-primary) text-white text-sm font-medium rounded-lg py-2">Ajouter</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,16 +1,31 @@
 <div class="min-h-screen bg-gray-50">
   <div class="max-w-md mx-auto px-4 py-8" *ngIf="reservation as r">
     <div class="text-center mb-4">
-      <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
-        <i class="ti ti-check text-green-600 text-xl"></i>
+      <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2"
+           [class.bg-green-100]="r.statut === 'confirmee'" [class.bg-amber-100]="r.statut === 'en_attente_paiement'">
+        <i class="ti text-xl" [class.ti-check]="r.statut === 'confirmee'" [class.text-green-600]="r.statut === 'confirmee'"
+           [class.ti-clock]="r.statut === 'en_attente_paiement'" [class.text-amber-600]="r.statut === 'en_attente_paiement'"></i>
       </div>
-      <p class="font-medium text-gray-900">Réservation confirmée</p>
-      <p class="text-sm text-gray-500">Billet envoyé par SMS et WhatsApp</p>
+      <p class="font-medium text-gray-900" *ngIf="r.statut === 'confirmee'">Réservation confirmée</p>
+      <p class="text-sm text-gray-500" *ngIf="r.statut === 'confirmee'">Billet envoyé par SMS et WhatsApp</p>
+      <p class="font-medium text-gray-900" *ngIf="r.statut === 'en_attente_paiement'">Réservation enregistrée</p>
+      <p class="text-sm text-gray-500" *ngIf="r.statut === 'en_attente_paiement'">
+        Finalisez l'achat avant {{ r.date_expiration | date:'HH:mm' }} avec le code {{ r.code_alphanumerique }}
+      </p>
     </div>
 
-    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+    <button *ngIf="r.statut === 'en_attente_paiement'" (click)="allerPayer()"
+            class="w-full mb-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-medium rounded-lg py-2.5 transition-colors">
+      <i class="ti ti-credit-card mr-1"></i> Payer maintenant
+    </button>
+
+    <!-- Billet aller -->
+    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm mb-4">
+      <div class="px-5 pt-4" *ngIf="r.type_billet === 'aller_retour'">
+        <span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Aller</span>
+      </div>
       <div class="p-5 text-center">
-        <canvas #qrCanvas class="mx-auto mb-3"></canvas>
+        <canvas #qrCanvasAller class="mx-auto mb-3" *ngIf="r.statut === 'confirmee'"></canvas>
         <p class="text-xs text-gray-400 tracking-wide">N° BILLET {{ r.code_alphanumerique }}</p>
       </div>
 
@@ -31,7 +46,42 @@
 
         <table class="w-full text-sm border-t border-gray-200 pt-2">
           <tr><td class="text-gray-500 py-1">Classe</td><td class="text-right">{{ r.classe }}</td></tr>
+          <tr><td class="text-gray-500 py-1">Sièges</td><td class="text-right">{{ r.passagers.length }} passager(s)</td></tr>
+          <tr><td class="text-gray-500 py-1">Montant</td><td class="text-right">{{ r.montant_total }} FCFA</td></tr>
           <tr><td class="text-gray-500 py-1">Statut</td><td class="text-right">{{ r.statut }}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Billet retour (aller-retour uniquement) -->
+    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm mb-4" *ngIf="r.reservation_retour as rr">
+      <div class="px-5 pt-4">
+        <span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Retour</span>
+      </div>
+      <div class="p-5 text-center">
+        <canvas #qrCanvasRetour class="mx-auto mb-3" *ngIf="rr.statut === 'confirmee'"></canvas>
+        <p class="text-xs text-gray-400 tracking-wide">N° BILLET {{ rr.code_alphanumerique }}</p>
+      </div>
+
+      <div class="border-t border-dashed border-gray-300"></div>
+
+      <div class="p-4">
+        <div class="flex justify-between mb-3">
+          <div>
+            <p class="text-[11px] text-gray-400">Trajet</p>
+            <p class="text-sm font-medium">{{ rr.trajet }}</p>
+          </div>
+          <i class="ti ti-arrow-right text-gray-400 mt-3"></i>
+          <div class="text-right">
+            <p class="text-[11px] text-gray-400">Départ</p>
+            <p class="text-sm font-medium">{{ rr.date_heure_depart | date:'dd/MM/yyyy HH:mm' }}</p>
+          </div>
+        </div>
+
+        <table class="w-full text-sm border-t border-gray-200 pt-2">
+          <tr><td class="text-gray-500 py-1">Classe</td><td class="text-right">{{ rr.classe }}</td></tr>
+          <tr><td class="text-gray-500 py-1">Sièges</td><td class="text-right">{{ rr.passagers.length }} passager(s)</td></tr>
+          <tr><td class="text-gray-500 py-1">Statut</td><td class="text-right">{{ rr.statut }}</td></tr>
         </table>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import * as QRCode from 'qrcode';
 import { ReservationService } from '../../core/services/reservation.service';
 import { Reservation } from '../../core/models/models';
@@ -14,8 +14,10 @@ import { Reservation } from '../../core/models/models';
 export class Confirmation implements OnInit, AfterViewInit {
   private route = inject(ActivatedRoute);
   private reservationService = inject(ReservationService);
+  private router = inject(Router);
 
-  @ViewChild('qrCanvas') qrCanvas?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('qrCanvasAller') qrCanvasAller?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('qrCanvasRetour') qrCanvasRetour?: ElementRef<HTMLCanvasElement>;
 
   code = '';
   reservation: Reservation | null = null;
@@ -35,7 +37,15 @@ export class Confirmation implements OnInit, AfterViewInit {
   }
 
   private dessinerQr(): void {
-    if (!this.qrCanvas || !this.reservation?.qr_token) return;
-    QRCode.toCanvas(this.qrCanvas.nativeElement, this.reservation.qr_token, { width: 160, margin: 1 });
+    if (this.qrCanvasAller && this.reservation?.qr_token) {
+      QRCode.toCanvas(this.qrCanvasAller.nativeElement, this.reservation.qr_token, { width: 150, margin: 1 });
+    }
+    if (this.qrCanvasRetour && this.reservation?.reservation_retour?.qr_token) {
+      QRCode.toCanvas(this.qrCanvasRetour.nativeElement, this.reservation.reservation_retour.qr_token, { width: 150, margin: 1 });
+    }
+  }
+
+  allerPayer(): void {
+    this.router.navigate(['/paiement', this.code]);
   }
 }

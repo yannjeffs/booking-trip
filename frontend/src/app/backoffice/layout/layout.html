@@ -1,0 +1,39 @@
+<!-- layout.html -->
+<div class="min-h-screen bg-gray-50 flex">
+  <aside class="w-60 bg-white border-r border-gray-200 flex flex-col">
+    <div class="px-5 py-5 border-b border-gray-200">
+      <p class="font-semibold text-gray-900">CX Ticketing</p>
+      <p class="text-xs text-gray-500">{{ auth.utilisateur()?.first_name }} {{ auth.utilisateur()?.last_name }} · {{ auth.utilisateur()?.role }}</p>
+    </div>
+
+    <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
+      <p class="px-2 text-[11px] uppercase tracking-wide text-gray-400 mb-1">Guichet</p>
+      <a routerLink="/backoffice/guichet/vente" routerLinkActive="bg-gray-100 text-gray-900" class="flex items-center gap-2 px-2.5 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+        <i class="ti ti-ticket"></i> Vente de billet
+      </a>
+      <a routerLink="/backoffice/guichet/scan" routerLinkActive="bg-gray-100 text-gray-900" class="flex items-center gap-2 px-2.5 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+        <i class="ti ti-scan"></i> Scan embarquement
+      </a>
+
+      <ng-container *ngIf="auth.estAdmin()">
+        <p class="px-2 text-[11px] uppercase tracking-wide text-gray-400 mt-4 mb-1">Administration</p>
+        <a routerLink="/backoffice/admin/dashboard" routerLinkActive="bg-gray-100 text-gray-900" class="flex items-center gap-2 px-2.5 py-2 rounded-lg text-gray-600 hover:bg-gray-100"><i class="ti ti-chart-bar"></i> Tableau de bord</a>
+        <a routerLink="/backoffice/admin/destinations" routerLinkActive="bg-gray-100 text-gray-900" class="flex items-center gap-2 px-2.5 py-2 rounded-lg text-gray-600 hover:bg-gray-100"><i class="ti ti-map-pin"></i> Destinations</a>
+        <a routerLink="/backoffice/admin/classes" routerLinkActive="bg-gray-100 text-gray-900" class="flex items-center gap-2 px-2.5 py-2 rounded-lg text-gray-600 hover:bg-gray-100"><i class="ti ti-armchair"></i> Classes</a>
+        <a routerLink="/backoffice/admin/bus" routerLinkActive="bg-gray-100 text-gray-900" class="flex items-center gap-2 px-2.5 py-2 rounded-lg text-gray-600 hover:bg-gray-100"><i class="ti ti-bus"></i> Bus</a>
+        <a routerLink="/backoffice/admin/trajets" routerLinkActive="bg-gray-100 text-gray-900" class="flex items-center gap-2 px-2.5 py-2 rounded-lg text-gray-600 hover:bg-gray-100"><i class="ti ti-route"></i> Trajets</a>
+        <a routerLink="/backoffice/admin/voyages" routerLinkActive="bg-gray-100 text-gray-900" class="flex items-center gap-2 px-2.5 py-2 rounded-lg text-gray-600 hover:bg-gray-100"><i class="ti ti-calendar-event"></i> Voyages & tarifs</a>
+      </ng-container>
+    </nav>
+
+    <div class="px-3 py-4 border-t border-gray-200">
+      <button (click)="deconnexion()" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100">
+        <i class="ti ti-logout"></i> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <main class="flex-1 overflow-y-auto">
+    <router-outlet></router-outlet>
+  </main>
+</div>

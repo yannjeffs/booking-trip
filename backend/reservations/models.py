@@ -1,4 +1,3 @@
-import random
 import secrets
 import string
 from datetime import timedelta
@@ -19,6 +18,7 @@ def generer_qr_token():
 
 
 DUREE_EXPIRATION_RESERVATION = timedelta(minutes=30)
+SEUIL_FIDELITE = 5  # nombre de billets solo (à son propre nom) pour gagner un billet gratuit
 
 
 class Reservation(models.Model):
@@ -37,20 +37,40 @@ class Reservation(models.Model):
         (STATUT_EXPIREE, 'Expirée'),
     ]
 
+    TYPE_ALLER_SIMPLE = 'aller_simple'
+    TYPE_ALLER_RETOUR = 'aller_retour'
+    TYPE_CHOICES = [(TYPE_ALLER_SIMPLE, 'Aller simple'), (TYPE_ALLER_RETOUR, 'Aller-retour')]
+
     code_alphanumerique = models.CharField(max_length=10, unique=True, editable=False)
     qr_token = models.CharField(max_length=32, blank=True, editable=False)
 
     voyage = models.ForeignKey('catalogue.Voyage', on_delete=models.PROTECT, related_name='reservations')
-    tarif = models.ForeignKey('catalogue.Tarif', on_delete=models.PROTECT)
+
+    # Un aller-retour est modélisé comme DEUX Reservation (une par trajet/bus/date,
+    # donc deux billets/QR distincts à scanner à l'embarquement) liées entre elles :
+    # la réservation retour pointe vers sa réservation aller via ce champ.
+    # reservation_aller = None  -> c'est la réservation "aller" (ou un aller simple).
+    # reservation_aller = <x>   -> c'est la réservation "retour" de x.
+    type_billet = models.CharField(max_length=15, choices=TYPE_CHOICES, default=TYPE_ALLER_SIMPLE)
+    reservation_aller = models.ForeignKey(
+        'self', null=True, blank=True, on_delete=models.CASCADE, related_name='reservations_retour'
+    )
 
     client = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
                                 on_delete=models.SET_NULL, related_name='reservations')
     agent_guichet = models.ForeignKey('accounts.Agent', null=True, blank=True,
                                        on_delete=models.SET_NULL, related_name='ventes')
 
+    # Renseignés par l'agent au guichet quand le client n'a pas de compte (achat anonyme).
+    client_nom_guichet = models.CharField(max_length=100, blank=True)
+    client_telephone_guichet = models.CharField(max_length=20, blank=True)
+
     canal = models.CharField(max_length=10, choices=CANAL_CHOICES)
     statut = models.CharField(max_length=25, choices=STATUT_CHOICES, default=STATUT_EN_ATTENTE)
     montant_total = models.DecimalField(max_digits=9, decimal_places=0, default=0)
+
+    # Marque un billet offert par le programme de fidélité (gratuit, ne recompte pas pour la fidélité).
+    est_recompense_fidelite = models.BooleanField(default=False)
 
     date_creation = models.DateTimeField(auto_now_add=True)
     date_expiration = models.DateTimeField(null=True, blank=True)
@@ -66,8 +86,6 @@ class Reservation(models.Model):
     def save(self, *args, **kwargs):
         if not self.code_alphanumerique:
             self.code_alphanumerique = self._code_unique()
-        # Une réservation en ligne non payée immédiatement expire après un délai,
-        # le temps de libérer les sièges pour d'autres clients.
         if self.canal == self.CANAL_EN_LIGNE and self.statut == self.STATUT_EN_ATTENTE and not self.date_expiration:
             self.date_expiration = timezone.now() + DUREE_EXPIRATION_RESERVATION
         super().save(*args, **kwargs)
@@ -80,11 +98,42 @@ class Reservation(models.Model):
         return code
 
     def confirmer(self):
-        """Passage au statut confirmé : génère le QR, valable pour scan à l'embarquement."""
+        """
+        Passage au statut confirmé : génère le QR, valable pour scan à l'embarquement.
+        Pour un aller-retour, confirmer la réservation "aller" confirme aussi
+        automatiquement sa réservation "retour" liée (paiement unique pour les deux legs).
+        """
         self.statut = self.STATUT_CONFIRMEE
         self.qr_token = generer_qr_token()
         self.date_expiration = None
         self.save(update_fields=['statut', 'qr_token', 'date_expiration'])
+
+        self._appliquer_fidelite()
+
+        if self.type_billet == self.TYPE_ALLER_RETOUR and self.reservation_aller_id is None:
+            for retour in self.reservations_retour.filter(statut=self.STATUT_EN_ATTENTE):
+                retour.confirmer()
+
+    def _appliquer_fidelite(self):
+        """
+        Compte ce billet pour le programme de fidélité s'il est solo et au nom du
+        client connecté. Ne compte qu'une fois par aller-retour (sur la réservation
+        "aller", pas sur son leg retour), et jamais pour un billet déjà offert.
+        """
+        if self.est_recompense_fidelite or not self.client_id:
+            return
+        if self.type_billet == self.TYPE_ALLER_RETOUR and self.reservation_aller_id is not None:
+            return
+
+        passagers = list(self.passagers.all())
+        nom_client = (self.client.get_full_name() or self.client.username).strip().lower()
+        solo_et_nominatif = len(passagers) == 1 and passagers[0].nom.strip().lower() == nom_client
+
+        if not solo_et_nominatif:
+            return
+
+        programme, _ = ProgrammeFidelite.objects.get_or_create(utilisateur=self.client)
+        programme.enregistrer_achat(self.type_billet)
 
     @property
     def est_expiree(self):
@@ -106,3 +155,45 @@ class Passager(models.Model):
 
     def __str__(self):
         return f"{self.nom} - siège {self.siege}"
+
+
+class ProgrammeFidelite(models.Model):
+    """
+    Compteurs de fidélité par client : un billet solo (un seul passager, à son propre
+    nom) compte pour son type (aller simple ou aller-retour). Tous les 5 billets
+    valides d'un type, le client gagne un crédit gratuit du même type.
+    """
+    utilisateur = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='fidelite')
+    nb_aller_simple_valides = models.PositiveIntegerField(default=0)
+    nb_aller_retour_valides = models.PositiveIntegerField(default=0)
+    credits_aller_simple = models.PositiveIntegerField(default=0)
+    credits_aller_retour = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"Fidélité {self.utilisateur} : {self.credits_aller_simple} AS / {self.credits_aller_retour} AR"
+
+    def enregistrer_achat(self, type_billet):
+        if type_billet == Reservation.TYPE_ALLER_SIMPLE:
+            self.nb_aller_simple_valides += 1
+            if self.nb_aller_simple_valides % SEUIL_FIDELITE == 0:
+                self.credits_aller_simple += 1
+        else:
+            self.nb_aller_retour_valides += 1
+            if self.nb_aller_retour_valides % SEUIL_FIDELITE == 0:
+                self.credits_aller_retour += 1
+        self.save()
+
+    def credit_disponible(self, type_billet):
+        return self.credits_aller_simple if type_billet == Reservation.TYPE_ALLER_SIMPLE else self.credits_aller_retour
+
+    def consommer_credit(self, type_billet):
+        if type_billet == Reservation.TYPE_ALLER_SIMPLE:
+            if self.credits_aller_simple < 1:
+                return False
+            self.credits_aller_simple -= 1
+        else:
+            if self.credits_aller_retour < 1:
+                return False
+            self.credits_aller_retour -= 1
+        self.save()
+        return True
