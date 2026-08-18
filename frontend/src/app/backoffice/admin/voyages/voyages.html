@@ -1,94 +1,203 @@
-<div class="max-w-5xl mx-auto px-6 py-8">
-  <p class="text-lg font-semibold text-gray-900 mb-6">Voyages & tarifs</p>
+<div class="max-w-6xl mx-auto px-6 py-8 space-y-10">
 
-  <div class="grid grid-cols-3 gap-6 mb-6">
-    <div class="bg-white rounded-2xl border border-gray-200 p-4">
-      <p class="text-sm font-medium text-gray-900 mb-3">Programmer un départ</p>
-      <div class="space-y-3">
-        <div>
-          <label class="text-xs text-gray-500 block mb-1">Trajet</label>
-          <select [(ngModel)]="formulaireVoyage.trajet" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-            <option [ngValue]="null">Choisir</option>
-            <option *ngFor="let t of trajets" [ngValue]="t.id">{{ t.depart.ville }} → {{ t.arrivee.ville }}</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-xs text-gray-500 block mb-1">Bus (fixe la classe du voyage)</label>
-          <select [(ngModel)]="formulaireVoyage.bus" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-            <option [ngValue]="null">Choisir</option>
-            <option *ngFor="let b of busListe" [ngValue]="b.id">{{ b.immatriculation }} · {{ nomClasse(b.classe) }} ({{ b.capacite }} places)</option>
-          </select>
-        </div>
-        <div class="flex gap-2">
-          <div class="flex-1">
-            <label class="text-xs text-gray-500 block mb-1">Date</label>
-            <input type="date" [(ngModel)]="formulaireVoyage.date" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-          </div>
-          <div class="flex-1">
-            <label class="text-xs text-gray-500 block mb-1">Heure</label>
-            <input type="time" [(ngModel)]="formulaireVoyage.heure" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-          </div>
-        </div>
-        <p *ngIf="erreur" class="text-xs text-red-600">{{ erreur }}</p>
-        <button (click)="creerVoyage()" class="w-full bg-(--color-primary) text-white text-sm font-medium rounded-lg py-2">
-          Programmer
-        </button>
-      </div>
+  <!-- ============ Horaires récurrents ============ -->
+  <section>
+    <div class="flex items-center justify-between mb-1">
+      <p class="text-lg font-semibold text-gray-900">Horaires récurrents</p>
+      <button (click)="lancerGeneration()" [disabled]="generationEnCours"
+              class="text-xs bg-gray-900 text-white rounded-lg px-3 py-1.5 disabled:opacity-50">
+        {{ generationEnCours ? 'Génération...' : 'Générer les voyages (30 j)' }}
+      </button>
+    </div>
+    <p class="text-xs text-gray-500 mb-4">
+      Un départ ajouté ici se répète tous les jours. Modifier l'heure ou le prix régénère automatiquement
+      les prochains départs non encore réservés ; retirer un départ annule les places non vendues et
+      conserve celles déjà achetées.
+    </p>
+
+    <div *ngIf="resultatGeneration as g" class="text-xs bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 mb-4 text-blue-800">
+      {{ g.crees }} voyage(s) créé(s), {{ g.deja_existants }} déjà existant(s).
+      <span *ngIf="g.classes_sans_bus.length"> Classes sans bus actif : {{ g.classes_sans_bus.join(', ') }}.</span>
     </div>
 
-    <div class="col-span-2 bg-white rounded-2xl border border-gray-200 p-4" *ngIf="voyageSelectionnePourTarif as v">
-      <div class="flex justify-between items-center mb-3">
-        <p class="text-sm font-medium text-gray-900">
-          Tarif — {{ nomTrajet(v.trajet) }} · {{ nomClasse(v.classe_id) }} · {{ v.date_heure_depart | date:'dd/MM HH:mm' }}
-        </p>
-        <button (click)="voyageSelectionnePourTarif = null" class="text-xs text-gray-400 hover:text-gray-600">Fermer</button>
+    <div class="grid grid-cols-3 gap-6">
+      <div class="col-span-2 bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
+              <th class="px-4 py-2 font-normal">Trajet</th>
+              <th class="px-4 py-2 font-normal">Classe</th>
+              <th class="px-4 py-2 font-normal">Heure</th>
+              <th class="px-4 py-2 font-normal">Prix adulte</th>
+              <th class="px-4 py-2 font-normal">À venir</th>
+              <th class="px-4 py-2 font-normal">Statut</th>
+              <th class="px-4 py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let h of horaires" class="border-b border-gray-50" [class.opacity-40]="!h.actif">
+              <td class="px-4 py-2.5 font-medium">{{ nomTrajet(h.trajet) }}</td>
+              <td class="px-4 py-2.5 text-gray-500">{{ nomClasse(h.classe) }}</td>
+              <td class="px-4 py-2.5 text-gray-500">{{ h.heure_depart.slice(0,5) }}</td>
+              <td class="px-4 py-2.5 text-gray-500">{{ h.prix_adulte }} FCFA</td>
+              <td class="px-4 py-2.5 text-gray-500">{{ h.nb_voyages_a_venir }}</td>
+              <td class="px-4 py-2.5">
+                <span class="text-xs px-2 py-0.5 rounded-full" [class.bg-green-100]="h.actif" [class.text-green-700]="h.actif" [class.bg-gray-100]="!h.actif" [class.text-gray-500]="!h.actif">
+                  {{ h.actif ? 'Actif' : 'Retiré' }}
+                </span>
+              </td>
+              <td class="px-4 py-2.5 text-right space-x-2">
+                <button *ngIf="h.actif" (click)="ouvrirEditionHoraire(h)" class="text-gray-400 hover:text-gray-700"><i class="ti ti-pencil"></i></button>
+                <button *ngIf="h.actif" (click)="retirerHoraire(h)" class="text-gray-400 hover:text-red-600"><i class="ti ti-trash"></i></button>
+              </td>
+            </tr>
+            <tr *ngIf="!chargementHoraires && horaires.length === 0">
+              <td colspan="7" class="px-4 py-6 text-center text-gray-400">Aucun horaire récurrent.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <div class="flex gap-3 items-end">
-        <div class="flex-1">
-          <label class="text-xs text-gray-500 block mb-1">Prix adulte (FCFA)</label>
-          <input type="number" [(ngModel)]="formulaireTarif.prix_adulte" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-        </div>
-        <div class="flex-1">
-          <label class="text-xs text-gray-500 block mb-1">Prix enfant (≤ 12 ans, FCFA)</label>
-          <input type="number" [(ngModel)]="formulaireTarif.prix_enfant" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-        </div>
-        <button (click)="enregistrerTarif()" class="bg-gray-900 text-white text-sm rounded-lg px-4 py-2">
-          {{ v.tarif ? 'Mettre à jour' : 'Créer' }}
-        </button>
-      </div>
-    </div>
-  </div>
+      <div class="bg-white rounded-2xl border border-gray-200 p-4 h-fit">
+        <p class="text-sm font-medium text-gray-900 mb-3">{{ enEditionHoraire ? 'Modifier le départ' : 'Ajouter un départ récurrent' }}</p>
+        <div class="space-y-3">
+          <div *ngIf="!enEditionHoraire">
+            <label class="text-xs text-gray-500 block mb-1">Trajet</label>
+            <select [(ngModel)]="formulaireHoraire.trajet" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+              <option [ngValue]="null">Choisir</option>
+              <option *ngFor="let t of trajets" [ngValue]="t.id">{{ t.depart.ville }} → {{ t.arrivee.ville }}</option>
+            </select>
+          </div>
+          <div *ngIf="!enEditionHoraire">
+            <label class="text-xs text-gray-500 block mb-1">Classe</label>
+            <select [(ngModel)]="formulaireHoraire.classe" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+              <option [ngValue]="null">Choisir</option>
+              <option *ngFor="let c of classes" [ngValue]="c.id">{{ c.nom }}</option>
+            </select>
+          </div>
+          <div *ngIf="enEditionHoraire" class="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+            {{ nomTrajet(enEditionHoraire.trajet) }} · {{ nomClasse(enEditionHoraire.classe) }}
+          </div>
 
-  <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-    <table class="w-full text-sm">
-      <thead>
-        <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
-          <th class="px-4 py-2 font-normal">Trajet</th>
-          <th class="px-4 py-2 font-normal">Bus / Classe</th>
-          <th class="px-4 py-2 font-normal">Départ</th>
-          <th class="px-4 py-2 font-normal">Tarif</th>
-          <th class="px-4 py-2"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let v of voyages" class="border-b border-gray-50">
-          <td class="px-4 py-2.5 font-medium">{{ nomTrajet(v.trajet) }}</td>
-          <td class="px-4 py-2.5 text-gray-500">{{ immatriculationBus(v.bus) }} · {{ nomClasse(v.classe_id) }}</td>
-          <td class="px-4 py-2.5 text-gray-500">{{ v.date_heure_depart | date:'dd/MM/yyyy HH:mm' }}</td>
-          <td class="px-4 py-2.5">
-            <button (click)="ouvrirTarif(v)" class="text-xs border border-gray-300 rounded-full px-2.5 py-1 hover:border-gray-400">
-              {{ v.tarif ? v.tarif.prix_adulte + ' FCFA' : 'Non défini' }}
+          <div>
+            <label class="text-xs text-gray-500 block mb-1">Heure de départ</label>
+            <input type="time" [(ngModel)]="formulaireHoraire.heure_depart" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+          </div>
+          <div class="flex gap-2">
+            <div class="flex-1">
+              <label class="text-xs text-gray-500 block mb-1">Prix adulte</label>
+              <input type="number" [(ngModel)]="formulaireHoraire.prix_adulte" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+            </div>
+            <div class="flex-1">
+              <label class="text-xs text-gray-500 block mb-1">Prix enfant</label>
+              <input type="number" [(ngModel)]="formulaireHoraire.prix_enfant" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+            </div>
+          </div>
+          <p *ngIf="erreurHoraire" class="text-xs text-red-600">{{ erreurHoraire }}</p>
+          <div class="flex gap-2">
+            <button (click)="enregistrerHoraire()" class="flex-1 bg-(--color-primary) text-white text-sm font-medium rounded-lg py-2">
+              {{ enEditionHoraire ? 'Mettre à jour' : 'Ajouter' }}
             </button>
-          </td>
-          <td class="px-4 py-2.5 text-right">
-            <button (click)="supprimerVoyage(v)" class="text-gray-400 hover:text-red-600"><i class="ti ti-trash"></i></button>
-          </td>
-        </tr>
-        <tr *ngIf="!chargement && voyages.length === 0">
-          <td colspan="5" class="px-4 py-6 text-center text-gray-400">Aucun voyage programmé.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+            <button *ngIf="enEditionHoraire" (click)="ouvrirCreationHoraire()" class="text-sm text-gray-500">Annuler</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Voyage ponctuel ============ -->
+  <section>
+    <p class="text-lg font-semibold text-gray-900 mb-1">Voyage ponctuel</p>
+    <p class="text-xs text-gray-500 mb-4">Pour un départ isolé, hors grille récurrente (ex: renfort exceptionnel).</p>
+
+    <div class="grid grid-cols-3 gap-6 mb-6">
+      <div class="bg-white rounded-2xl border border-gray-200 p-4">
+        <p class="text-sm font-medium text-gray-900 mb-3">Programmer un départ</p>
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs text-gray-500 block mb-1">Trajet</label>
+            <select [(ngModel)]="formulaireVoyage.trajet" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+              <option [ngValue]="null">Choisir</option>
+              <option *ngFor="let t of trajets" [ngValue]="t.id">{{ t.depart.ville }} → {{ t.arrivee.ville }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-gray-500 block mb-1">Bus (fixe la classe du voyage)</label>
+            <select [(ngModel)]="formulaireVoyage.bus" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+              <option [ngValue]="null">Choisir</option>
+              <option *ngFor="let b of busListe" [ngValue]="b.id">{{ b.immatriculation }} · {{ nomClasse(b.classe) }} ({{ b.capacite }} places)</option>
+            </select>
+          </div>
+          <div class="flex gap-2">
+            <div class="flex-1">
+              <label class="text-xs text-gray-500 block mb-1">Date</label>
+              <input type="date" [(ngModel)]="formulaireVoyage.date" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+            </div>
+            <div class="flex-1">
+              <label class="text-xs text-gray-500 block mb-1">Heure</label>
+              <input type="time" [(ngModel)]="formulaireVoyage.heure" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+            </div>
+          </div>
+          <p *ngIf="erreurVoyage" class="text-xs text-red-600">{{ erreurVoyage }}</p>
+          <button (click)="creerVoyage()" class="w-full bg-gray-900 text-white text-sm font-medium rounded-lg py-2">
+            Programmer
+          </button>
+        </div>
+      </div>
+
+      <div class="col-span-2 bg-white rounded-2xl border border-gray-200 p-4" *ngIf="voyageSelectionnePourTarif as v">
+        <div class="flex justify-between items-center mb-3">
+          <p class="text-sm font-medium text-gray-900">
+            Tarif — {{ nomTrajet(v.trajet) }} · {{ nomClasse(v.classe_id) }} · {{ v.date_heure_depart | date:'dd/MM HH:mm' }}
+          </p>
+          <button (click)="voyageSelectionnePourTarif = null" class="text-xs text-gray-400 hover:text-gray-600">Fermer</button>
+        </div>
+        <div class="flex gap-3 items-end">
+          <div class="flex-1">
+            <label class="text-xs text-gray-500 block mb-1">Prix adulte (FCFA)</label>
+            <input type="number" [(ngModel)]="formulaireTarif.prix_adulte" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+          </div>
+          <div class="flex-1">
+            <label class="text-xs text-gray-500 block mb-1">Prix enfant (≤ 12 ans, FCFA)</label>
+            <input type="number" [(ngModel)]="formulaireTarif.prix_enfant" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+          </div>
+          <button (click)="enregistrerTarif()" class="bg-gray-900 text-white text-sm rounded-lg px-4 py-2">
+            {{ v.tarif ? 'Mettre à jour' : 'Créer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50">
+            <th class="px-4 py-2 font-normal">Trajet</th>
+            <th class="px-4 py-2 font-normal">Bus / Classe</th>
+            <th class="px-4 py-2 font-normal">Départ</th>
+            <th class="px-4 py-2 font-normal">Tarif</th>
+            <th class="px-4 py-2"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let v of voyages" class="border-b border-gray-50">
+            <td class="px-4 py-2.5 font-medium">{{ nomTrajet(v.trajet) }}</td>
+            <td class="px-4 py-2.5 text-gray-500">{{ immatriculationBus(v.bus) }} · {{ nomClasse(v.classe_id) }}</td>
+            <td class="px-4 py-2.5 text-gray-500">{{ v.date_heure_depart | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td class="px-4 py-2.5">
+              <button (click)="ouvrirTarif(v)" class="text-xs border border-gray-300 rounded-full px-2.5 py-1 hover:border-gray-400">
+                {{ v.tarif ? v.tarif.prix_adulte + ' FCFA' : 'Non défini' }}
+              </button>
+            </td>
+            <td class="px-4 py-2.5 text-right">
+              <button (click)="supprimerVoyage(v)" class="text-gray-400 hover:text-red-600"><i class="ti ti-trash"></i></button>
+            </td>
+          </tr>
+          <tr *ngIf="!chargementVoyages && voyages.length === 0">
+            <td colspan="5" class="px-4 py-6 text-center text-gray-400">Aucun voyage ponctuel.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 </div>

@@ -126,3 +126,20 @@ export interface ProgrammeFidelite {
   credits_aller_simple: number;
   credits_aller_retour: number;
 }
+
+export interface HoraireRecurrent {
+  id: number;
+  trajet: number;
+  classe: number;
+  heure_depart: string; // au format HH:MM:SS
+  prix_adulte: string;
+  prix_enfant: string;
+  actif: boolean;
+  nb_voyages_a_venir: number;
+}
+
+export interface ResultatGeneration {
+  crees: number;
+  deja_existants: number;
+  classes_sans_bus: string[];
+}

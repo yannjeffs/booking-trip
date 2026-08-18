@@ -63,6 +63,7 @@ class Reservation(models.Model):
 
     # Renseignés par l'agent au guichet quand le client n'a pas de compte (achat anonyme).
     client_nom_guichet = models.CharField(max_length=100, blank=True)
+    client_prenom_guichet = models.CharField(max_length=100, blank=True)
     client_telephone_guichet = models.CharField(max_length=20, blank=True)
 
     canal = models.CharField(max_length=10, choices=CANAL_CHOICES)
@@ -87,6 +88,8 @@ class Reservation(models.Model):
         if not self.code_alphanumerique:
             self.code_alphanumerique = self._code_unique()
         if self.canal == self.CANAL_EN_LIGNE and self.statut == self.STATUT_EN_ATTENTE and not self.date_expiration:
+            self.date_expiration = timezone.now() + DUREE_EXPIRATION_RESERVATION
+        if self.statut == self.STATUT_EN_ATTENTE and not self.date_expiration:
             self.date_expiration = timezone.now() + DUREE_EXPIRATION_RESERVATION
         super().save(*args, **kwargs)
 

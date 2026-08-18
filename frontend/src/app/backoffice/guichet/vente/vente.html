@@ -1,16 +1,25 @@
 <div class="max-w-5xl mx-auto px-6 py-8">
-  <p class="text-lg font-semibold text-gray-900 mb-6">Vente de billet — guichet</p>
+  <p class="text-lg font-semibold text-gray-900 mb-6">Vente / réservation — guichet</p>
 
-  <div *ngIf="billetVendu" class="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-    <p class="text-sm font-medium text-green-800"><i class="ti ti-check mr-1"></i> Billet {{ billetVendu.code_alphanumerique }} vendu et confirmé.</p>
-    <p class="text-xs text-green-700 mt-1">{{ billetVendu.trajet }} · {{ billetVendu.montant_total }} FCFA</p>
+  <div *ngIf="resultat as res" class="rounded-xl p-4 mb-6 border" [class.bg-green-50]="res.statut === 'confirmee'" [class.border-green-200]="res.statut === 'confirmee'" [class.bg-amber-50]="res.statut === 'en_attente_paiement'" [class.border-amber-200]="res.statut === 'en_attente_paiement'">
+    <p class="text-sm font-medium" [class.text-green-800]="res.statut === 'confirmee'" [class.text-amber-800]="res.statut === 'en_attente_paiement'">
+      <i class="ti mr-1" [class.ti-check]="res.statut === 'confirmee'" [class.ti-clock]="res.statut === 'en_attente_paiement'"></i>
+      <ng-container *ngIf="res.statut === 'confirmee'">Billet {{ res.code_alphanumerique }} vendu et confirmé — impression lancée dans un nouvel onglet.</ng-container>
+      <ng-container *ngIf="res.statut === 'en_attente_paiement'">Réservation {{ res.code_alphanumerique }} enregistrée, sans paiement — à finaliser avant {{ res.date_expiration | date:'HH:mm' }}.</ng-container>
+    </p>
+    <button *ngIf="res.statut === 'confirmee'" (click)="ouvrirImpression()" class="text-xs underline mt-1 text-green-700">Réimprimer</button>
   </div>
 
   <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-6">
-    <div class="flex gap-4 items-end">
+    <p class="text-sm font-medium text-gray-900 mb-3">1. Client et type de voyage</p>
+    <div class="flex flex-wrap gap-3 items-end">
       <div>
-        <label class="text-xs text-gray-500 block mb-1">Nom du client</label>
-        <input [(ngModel)]="clientNom" class="rounded-lg border border-gray-300 px-3 py-2 text-sm w-56" />
+        <label class="text-xs text-gray-500 block mb-1">Nom</label>
+        <input [(ngModel)]="clientNom" class="rounded-lg border border-gray-300 px-3 py-2 text-sm w-40" />
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 block mb-1">Prénom</label>
+        <input [(ngModel)]="clientPrenom" class="rounded-lg border border-gray-300 px-3 py-2 text-sm w-40" />
       </div>
       <div>
         <label class="text-xs text-gray-500 block mb-1">Téléphone</label>
@@ -27,9 +36,9 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-2 gap-6">
+  <div class="grid grid-cols-2 gap-6 mb-6">
     <div class="bg-white rounded-2xl border border-gray-200 p-5">
-      <p class="text-sm font-medium text-gray-900 mb-3">1. Voyage aller</p>
+      <p class="text-sm font-medium text-gray-900 mb-3">2. Heure de départ (aller)</p>
       <p *ngIf="chargementVoyages" class="text-sm text-gray-400">Chargement...</p>
       <div class="space-y-2 max-h-72 overflow-y-auto">
         <button *ngFor="let v of voyages" (click)="choisirVoyage(v)"
@@ -60,7 +69,7 @@
     </div>
 
     <div class="bg-white rounded-2xl border border-gray-200 p-5" *ngIf="type === 'aller_retour' && voyageSelectionne">
-      <p class="text-sm font-medium text-gray-900 mb-3">2. Voyage retour</p>
+      <p class="text-sm font-medium text-gray-900 mb-3">Heure de départ (retour)</p>
       <div class="space-y-2 max-h-72 overflow-y-auto">
         <button *ngFor="let v of voyagesRetour" (click)="choisirVoyageRetour(v)"
                 class="w-full text-left border rounded-lg px-3 py-2.5 text-sm transition-colors"
@@ -90,10 +99,50 @@
     </div>
   </div>
 
-  <p *ngIf="erreur" class="text-sm text-red-600 mt-4">{{ erreur }}</p>
+  <div class="bg-white rounded-2xl border border-gray-200 p-5" *ngIf="voyageSelectionne">
+    <p class="text-sm font-medium text-gray-900 mb-3">3. Vente ou réservation</p>
 
-  <button *ngIf="voyageSelectionne" (click)="vendre()" [disabled]="!pretAVendre || envoiEnCours"
-          class="w-full mt-4 bg-(--color-primary) hover:bg-(--color-primary-dark) disabled:opacity-40 text-white font-medium rounded-lg py-2.5">
-    {{ envoiEnCours ? 'Encaissement...' : 'Confirmer la vente (cash)' }}
-  </button>
+    <div class="flex bg-gray-100 rounded-lg p-1 mb-4 text-sm max-w-md">
+      <button (click)="payerMaintenant = true" class="flex-1 py-1.5 rounded-md font-medium transition-colors"
+              [class.bg-white]="payerMaintenant" [class.shadow-sm]="payerMaintenant" [class.text-gray-400]="!payerMaintenant">
+        Vendre maintenant (encaisser)
+      </button>
+      <button (click)="payerMaintenant = false" class="flex-1 py-1.5 rounded-md font-medium transition-colors"
+              [class.bg-white]="!payerMaintenant" [class.shadow-sm]="!payerMaintenant" [class.text-gray-400]="payerMaintenant">
+        Réserver seulement
+      </button>
+    </div>
+
+    <div class="flex gap-2 mb-4" *ngIf="payerMaintenant">
+      <button (click)="modePaiement = 'especes'" class="text-xs border rounded-full px-3 py-1.5"
+              [style.borderColor]="modePaiement === 'especes' ? 'var(--color-primary)' : '#d1d5db'"
+              [style.color]="modePaiement === 'especes' ? 'var(--color-primary)' : '#374151'">Espèces</button>
+      <button (click)="modePaiement = 'carte_bancaire'" class="text-xs border rounded-full px-3 py-1.5"
+              [style.borderColor]="modePaiement === 'carte_bancaire' ? 'var(--color-primary)' : '#d1d5db'"
+              [style.color]="modePaiement === 'carte_bancaire' ? 'var(--color-primary)' : '#374151'">Carte bancaire</button>
+      <button (click)="modePaiement = 'orange_money'" class="text-xs border rounded-full px-3 py-1.5"
+              [style.borderColor]="modePaiement === 'orange_money' || modePaiement === 'mtn_momo' ? 'var(--color-primary)' : '#d1d5db'"
+              [style.color]="modePaiement === 'orange_money' || modePaiement === 'mtn_momo' ? 'var(--color-primary)' : '#374151'">Mobile Money</button>
+    </div>
+
+    <div class="flex gap-2 mb-4" *ngIf="payerMaintenant && (modePaiement === 'orange_money' || modePaiement === 'mtn_momo')">
+      <button (click)="modePaiement = 'orange_money'" class="text-xs px-3 py-1 rounded-full"
+              [class.bg-gray-900]="modePaiement === 'orange_money'" [class.text-white]="modePaiement === 'orange_money'"
+              [class.bg-gray-100]="modePaiement !== 'orange_money'">Orange Money</button>
+      <button (click)="modePaiement = 'mtn_momo'" class="text-xs px-3 py-1 rounded-full"
+              [class.bg-gray-900]="modePaiement === 'mtn_momo'" [class.text-white]="modePaiement === 'mtn_momo'"
+              [class.bg-gray-100]="modePaiement !== 'mtn_momo'">MTN Mobile Money</button>
+    </div>
+
+    <p *ngIf="!payerMaintenant" class="text-xs text-gray-400 mb-4">
+      Le client réserve sans payer — un code lui sera fourni pour finaliser l'achat avant expiration.
+    </p>
+
+    <p *ngIf="erreur" class="text-sm text-red-600 mb-3">{{ erreur }}</p>
+
+    <button (click)="valider()" [disabled]="!pretAValider || envoiEnCours"
+            class="w-full bg-(--color-primary) hover:bg-(--color-primary-dark) disabled:opacity-40 text-white font-medium rounded-lg py-2.5">
+      {{ envoiEnCours ? 'Traitement...' : (payerMaintenant ? 'Encaisser et imprimer' : 'Enregistrer la réservation') }}
+    </button>
+  </div>
 </div>

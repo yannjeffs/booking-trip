@@ -4,14 +4,19 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PassagerInput, Reservation, TypeBillet } from '../models/models';
 
+export type ModePaiementGuichet = 'especes' | 'carte_bancaire' | 'orange_money' | 'mtn_momo';
+
 export interface VenteGuichetPayload {
   client_nom: string;
+  client_prenom: string;
   client_telephone: string;
   voyage: number;
   passagers: PassagerInput[];
   type_billet: TypeBillet;
   voyage_retour?: number;
   passagers_retour?: PassagerInput[];
+  payer_maintenant: boolean;
+  mode_paiement?: ModePaiementGuichet;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import DestinationViewSet, ClasseViewSet, VoyageRechercheView, VoyagePlanSiegesView
 from .views_admin import (
     DestinationAdminViewSet, ClasseAdminViewSet, BusAdminViewSet,
-    TrajetAdminViewSet, VoyageAdminViewSet, TarifAdminViewSet, DashboardStatsView,
+    TrajetAdminViewSet, VoyageAdminViewSet, TarifAdminViewSet,
+    HoraireRecurrentAdminViewSet, GenererVoyagesView, DashboardStatsView,
 )
 
 router_public = DefaultRouter()
@@ -17,6 +18,7 @@ router_admin.register('bus', BusAdminViewSet, basename='admin-bus')
 router_admin.register('trajets', TrajetAdminViewSet, basename='admin-trajet')
 router_admin.register('voyages', VoyageAdminViewSet, basename='admin-voyage')
 router_admin.register('tarifs', TarifAdminViewSet, basename='admin-tarif')
+router_admin.register('horaires-recurrents', HoraireRecurrentAdminViewSet, basename='admin-horaire-recurrent')
 
 urlpatterns = [
     path('voyages/', VoyageRechercheView.as_view(), name='voyage-recherche'),
@@ -24,5 +26,6 @@ urlpatterns = [
     path('', include(router_public.urls)),
 
     path('admin/dashboard/stats/', DashboardStatsView.as_view(), name='admin-dashboard-stats'),
+    path('admin/horaires-recurrents/generer/', GenererVoyagesView.as_view(), name='admin-generer-voyages'),
     path('admin/', include(router_admin.urls)),
 ]

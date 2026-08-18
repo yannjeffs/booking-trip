@@ -45,6 +45,11 @@ export const routes: Routes = [
         canActivate: [agentGuard],
         loadComponent: () => import('./backoffice/guichet/scan/scan').then((m) => m.Scan),
       },
+      {
+        path: 'guichet/impression/:code',
+        canActivate: [agentGuard],
+        loadComponent: () => import('./backoffice/guichet/impression/impression').then((m) => m.Impression),
+      },
       { path: 'admin', redirectTo: 'admin/dashboard', pathMatch: 'full' },
       {
         path: 'admin/dashboard',
