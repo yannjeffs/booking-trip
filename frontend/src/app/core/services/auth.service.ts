@@ -39,6 +39,17 @@ export class AuthService {
     )
   }
 
+  inscription (data: { telephone: string; password: string; first_name: string; last_name: string;}): Observable <ReponseConnexion> {
+    return this.http.post<ReponseConnexion>(`${this.base}/auth/inscription/`, data).pipe(
+      tap((reponse) => {
+        localStorage.setItem(CLE_ACCESS, reponse.access);
+        localStorage.setItem(CLE_REFRESH, reponse.refresh);
+        localStorage.setItem(CLE_UTILISATEUR, JSON.stringify(reponse.utilisateur));
+        this.utilisateur.set(reponse.utilisateur);
+      })
+    )
+  }
+
   rafraichirToken (): Observable <{ access: string }> {
     const refresh = localStorage.getItem(CLE_ACCESS);
    return this.http.post<{ access: string }>(`${this.base}/auth/token/refresh/`, { refresh }).pipe(

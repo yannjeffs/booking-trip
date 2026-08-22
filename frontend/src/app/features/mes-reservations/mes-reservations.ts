@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReservationService } from '../../core/services/reservation.service';
 import { Reservation } from '../../core/models/models';
+import { HeaderPublic } from "../../shared/header-public/header-public";
 
 @Component({
   selector: 'app-mes-reservations',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, HeaderPublic],
   templateUrl: './mes-reservations.html',
 })
 export class MesReservations implements OnInit {

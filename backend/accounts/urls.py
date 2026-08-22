@@ -18,11 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 from accounts.views_jwt import TokenObtainPairAvecRoleView
-from accounts.views import MeView
+from accounts.views import MeView, InscriptionView
 
 urlpatterns = [
     path('auth/token/', TokenObtainPairAvecRoleView.as_view(), name='token_obtain_pair'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/me/', MeView.as_view(), name='auth_me'),
-
+    path('auth/inscription/', InscriptionView.as_view(), name='auth_inscription'),
 ]

@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { VoyageService } from '../../core/services/voyage.service';
 import { Destination, Voyage, TypeBillet } from '../../core/models/models';
+import { HeaderPublic } from "../../shared/header-public/header-public";
 
 @Component({
   selector: 'app-recherche',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HeaderPublic],
   templateUrl: './recherche.html',
 })
 export class Recherche implements OnInit {

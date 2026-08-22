@@ -1,0 +1,30 @@
+<div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+  <div class="w-full max-w-sm bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+    <p class="text-lg font-semibold text-gray-900 mb-1">Connexion</p>
+    <p class="text-sm text-gray-500 mb-6">Accédez à vos réservations et votre fidélité</p>
+
+    <form (ngSubmit)="seConnecter()" class="space-y-3">
+      <div>
+        <label class="text-xs text-gray-500 block mb-1">Numéro de téléphone</label>
+        <input [(ngModel)]="telephone" name="telephone" type="tel" placeholder="6XX XXX XXX"
+               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--color-primary)" />
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 block mb-1">Mot de passe</label>
+        <input [(ngModel)]="password" name="password" type="password"
+               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-(--color-primary)" />
+      </div>
+
+      <p *ngIf="erreur" class="text-sm text-red-600">{{ erreur }}</p>
+
+      <button type="submit" [disabled]="chargement"
+              class="w-full bg-(--color-primary) hover:bg-(--color-primary-dark) disabled:opacity-50 text-white font-medium rounded-lg py-2.5 transition-colors">
+        {{ chargement ? 'Connexion...' : 'Se connecter' }}
+      </button>
+    </form>
+
+    <p class="text-sm text-gray-500 text-center mt-4">
+      Pas encore de compte ? <a routerLink="/inscription" class="text-(--color-primary) font-medium">S'inscrire</a>
+    </p>
+  </div>
+</div>

@@ -1,9 +1,23 @@
 import { Routes } from '@angular/router';
 import { agentGuard } from './core/guards/agent.guard';
 import { adminGuard } from './core/guards/admin.guard';
+import { connecteGuard } from './core/guards/connecte.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'recherche', pathMatch: 'full' },
+  {
+    path: 'connexion',
+    loadComponent: () => import('./features/auth/connexion/connexion').then((m) => m.ConnexionClient),
+  },
+  {
+    path: 'inscription',
+    loadComponent: () => import('./features/auth/inscription/inscription').then((m) => m.InscriptionClient),
+  },
+  {
+    path: 'mes-reservations',
+    canActivate: [connecteGuard],
+    loadComponent: () => import('./features/mes-reservations/mes-reservations').then((m) => m.MesReservations),
+  },
   {
     path: 'recherche',
     loadComponent: () => import('./features/recherche/recherche').then((m) => m.Recherche),
@@ -19,11 +33,6 @@ export const routes: Routes = [
   {
     path: 'tickets/:code',
     loadComponent: () => import('./features/confirmation/confirmation').then((m) => m.Confirmation),
-  },
-  {
-    path: 'mes-reservations',
-    loadComponent: () =>
-      import('./features/mes-reservations/mes-reservations').then((m) => m.MesReservations),
   },
 
   {

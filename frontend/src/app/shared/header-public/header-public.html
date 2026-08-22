@@ -1,0 +1,12 @@
+<div class="max-w-md mx-auto px-4 pt-4 flex justify-between items-center text-sm">
+  <a routerLink="/recherche" class="font-semibold text-gray-900">CX Ticketing</a>
+  <div class="flex items-center gap-3">
+    <ng-container *ngIf="auth.estConnecte(); else nonConnecte">
+      <a routerLink="/mes-reservations" class="text-gray-600">Mes réservations</a>
+      <button (click)="deconnexion()" class="text-gray-400"><i class="ti ti-logout"></i></button>
+    </ng-container>
+    <ng-template #nonConnecte>
+      <a routerLink="/connexion" class="text-gray-600">Connexion</a>
+    </ng-template>
+  </div>
+</div>
