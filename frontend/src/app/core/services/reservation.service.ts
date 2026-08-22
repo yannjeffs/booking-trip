@@ -13,8 +13,8 @@ export class ReservationService {
     return this.http.post<Reservation>(`${this.base}/reservations/`, payload);
   }
 
-  payer(code: string, provider: string, numeroTelephone: string): Observable<{ paiement_id: number; statut: string; detail: string }> {
-    return this.http.post<{ paiement_id: number; statut: string; detail: string }>(
+  payer(code: string, provider: string, numeroTelephone: string): Observable<{ paiement_id: number; statut: string; paiement_url: string; detail: string }> {
+    return this.http.post<{ paiement_id: number; statut: string; paiement_url: string; detail: string }>(
       `${this.base}/reservations/${code}/payer/`,
       { provider, numero_telephone: numeroTelephone }
     );

@@ -14,8 +14,12 @@
       </p>
     </div>
 
+    <p *ngIf="verificationEnCours" class="text-sm text-gray-500 text-center mb-4">
+      <i class="ti ti-loader-2 animate-spin mr-1"></i> Vérification du paiement en cours...
+    </p>
+
     <button *ngIf="r.statut === 'en_attente_paiement'" (click)="allerPayer()"
-            class="w-full mb-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-medium rounded-lg py-2.5 transition-colors">
+            class="w-full mb-4 bg-(--color-primary) hover:bg-(--color-primary-dark) text-white font-medium rounded-lg py-2.5 transition-colors">
       <i class="ti ti-credit-card mr-1"></i> Payer maintenant
     </button>
 

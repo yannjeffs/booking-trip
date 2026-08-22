@@ -31,18 +31,16 @@ export class Paiement implements OnInit {
   }
 
   payer(): void {
-    this.envoiEnCours = true;
     this.erreur = '';
+    this.envoiEnCours = true;
     this.reservationService.payer(this.code, this.provider, this.numeroTelephone).subscribe({
-      next: () => {
-        this.envoiEnCours = false;
-        // En prod : attendre la confirmation webhook (polling ou WebSocket) avant de rediriger.
-        this.router.navigate(['/tickets', this.code]);
+      next: (response) => {
+        window.location.href = response.paiement_url; // page de paiement sécurisé de CinetPay
       },
       error: (err) => {
         this.envoiEnCours = false;
-        this.erreur = err?.error?.detail ?? 'Le paiement a échoué, merci de réessayer.';
-      },
+        this.erreur = err?.error?.detail ?? 'Le paiement a échoué. Veuillez réessayer plus tard.';
+      }
     });
   }
 }

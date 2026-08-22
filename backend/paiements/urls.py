@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import PaiementWebhookView
+from .views import CinetPayNotifyView
 
 urlpatterns = [
-    path('paiements/webhook/<str:provider>/', PaiementWebhookView.as_view(), name='paiement-webhook'),
+    path('paiements/cinetpay/notify/', CinetPayNotifyView.as_view(), name='cinetpay-notify'),
 ]
