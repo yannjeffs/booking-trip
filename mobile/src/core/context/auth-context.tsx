@@ -35,11 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const enregistrerSession = useCallback(async (reponse: ReponseAuth) => {
-    await AsyncStorage.setMany({
-      [CLE_ACCESS]: reponse.access,
-      [CLE_REFRESH]: reponse.refresh,
-      [CLE_UTILISATEUR]: JSON.stringify(reponse.utilisateur),
-    });
+    await AsyncStorage.multiRemove([CLE_ACCESS, CLE_REFRESH, 'cx_utilisateur']);
     setUtilisateur(reponse.utilisateur);
   }, []);
 
@@ -54,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [enregistrerSession]);
 
   const deconnexion = useCallback(async () => {
-    await AsyncStorage.removeMany([CLE_ACCESS, CLE_REFRESH, CLE_UTILISATEUR]);
+    await AsyncStorage.multiRemove([CLE_ACCESS, CLE_REFRESH, CLE_UTILISATEUR]);
     setUtilisateur(null);
   }, []);
 

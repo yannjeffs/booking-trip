@@ -1,3 +1,4 @@
+import '../../global.css';
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider } from "../core/context/auth-context";
 import { Stack } from "expo-router";

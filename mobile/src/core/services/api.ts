@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../config';
 const CLE_ACCESS = 'cx_access_token';
 const CLE_REFRESH = 'cx_refresh_token';
 
+// eslint-disable-next-line import/no-named-as-default-member
 export const api = axios.create({ baseURL: API_BASE_URL });
 
 // Attache le token JWT à chaque requête.
@@ -49,7 +50,7 @@ api.interceptors.response.use(
         return api(requeteOriginale);
       }
       // Le refresh a échoué : purge la session, l'écran appelant gère la redirection.
-      await AsyncStorage.removeMany([CLE_ACCESS, CLE_REFRESH, 'cx_utilisateur']);
+      await AsyncStorage.multiRemove([CLE_ACCESS, CLE_REFRESH, 'cx_utilisateur']);
     }
     return Promise.reject(erreur);
   }
