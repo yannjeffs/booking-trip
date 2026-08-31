@@ -13,4 +13,4 @@
  * Le webhook CinetPay (côté serveur) reste indépendant de cette URL — il continue
  * de passer par le tunnel ngrok configuré dans le backend.
  */
-export const API_BASE_URL = 'http://192.168.25.244:8000/api'; // <- à adapter à ton réseau
+export const API_BASE_URL = `http://${window.location.hostname}:8000/api`; // <- à adapter à ton réseau
