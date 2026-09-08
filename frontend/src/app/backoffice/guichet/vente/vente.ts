@@ -62,7 +62,7 @@ export class Vente implements OnInit {
     this.resultat = null;
     this.chargementSieges = true;
     this.voyageService.getPlanSieges(voyage.id).subscribe({
-      next: (r) => { this.siegesAller = r.sieges; this.chargementSieges = false; },
+      next: (r) => { this.siegesAller = r.colonnes.flatMap((colonne) => colonne.sieges); this.chargementSieges = false; },
       error: () => (this.chargementSieges = false),
     });
 
@@ -76,7 +76,7 @@ export class Vente implements OnInit {
   choisirVoyageRetour(voyage: Voyage): void {
     this.voyageRetourSelectionne = voyage;
     this.siegesRetourSelectionnes = [];
-    this.voyageService.getPlanSieges(voyage.id).subscribe({ next: (r) => (this.siegesRetour = r.sieges) });
+    this.voyageService.getPlanSieges(voyage.id).subscribe({ next: (r) => (this.siegesRetour = r.colonnes.flatMap((colonne) => colonne.sieges)) });
   }
 
   basculerSiegeAller(siege: Siege): void {

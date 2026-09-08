@@ -2,7 +2,7 @@ from rest_framework import viewsets, generics, permissions
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from .models import Destination, Classe, Voyage
-from .serializers import DestinationSerializer, ClasseSerializer, VoyageListSerializer, SiegeSerializer
+from .serializers import DestinationSerializer, ClasseSerializer, RangeeSiegesSerializer, VoyageListSerializer, SiegeSerializer
 
 
 class DestinationViewSet(viewsets.ReadOnlyModelViewSet):
@@ -45,12 +45,17 @@ class VoyageRechercheView(generics.ListAPIView):
 
 
 class VoyagePlanSiegesView(generics.GenericAPIView):
-    """GET /api/voyages/{id}/sieges/ -> plan de sièges libre/occupé pour le voyage."""
+    """
+    GET /api/voyages/{id}/sieges/
+    Retourne {voyage_id, colonnes: [{index, sieges, sortie_devant, sortie_centrale, banquette}]}.
+    Une colonne = une position du bus dans sa longueur (avant -> arrière), pas une
+    rangée classique — reflète la disposition réelle du bus (couloir horizontal,
+    banquette pleine largeur au fond, colonne réduite à l'avant).
+    """
     permission_classes = [permissions.AllowAny]
-    serializer_class = SiegeSerializer
 
     def get(self, request, pk):
         from reservations.utils import plan_sieges_avec_statut
         voyage = get_object_or_404(Voyage, pk=pk)
-        data = plan_sieges_avec_statut(voyage)
-        return Response({'voyage_id': voyage.id, 'sieges': data})
+        colonnes = plan_sieges_avec_statut(voyage)
+        return Response({'voyage_id': voyage.id, 'colonnes': colonnes})

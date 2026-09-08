@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Destination, Voyage, Siege } from '../models/models';
+import { Destination, Voyage, PlanSieges } from '../models/models';
 
 export async function getDestinations(): Promise<Destination[]> {
   const r = await api.get('/destinations/');
@@ -11,7 +11,7 @@ export async function rechercherVoyages(filtres: { depart?: string; arrivee?: st
   return r.data.results ?? r.data;
 }
 
-export async function getPlanSieges(voyageId: number): Promise<{ voyage_id: number; sieges: Siege[] }> {
+export async function getPlanSieges(voyageId: number): Promise<PlanSieges> {
   const r = await api.get(`/voyages/${voyageId}/sieges/`);
   return r.data;
 }

@@ -10,6 +10,12 @@ export interface Classe {
   description: string;
 }
 
+export interface Colonne {
+  numero: number;
+  type: 'standard' | 'sortie' | 'fond';
+  sieges: Siege[];
+}
+
 export interface Tarif {
   id: number;
   prix_adulte: string;
@@ -40,9 +46,15 @@ export interface Siege {
   statut: 'libre' | 'occupe';
 }
 
+export interface RangeeSieges {
+  numero: number;
+  type: 'standard' | 'sortie' | 'fond';
+  sieges: Siege[];
+}
+
 export interface PlanSieges {
   voyage_id: number;
-  sieges: Siege[];
+  rangees: RangeeSieges[];
 }
 
 export interface PassagerInput {

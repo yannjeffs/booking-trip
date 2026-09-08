@@ -3,22 +3,22 @@ from .models import Reservation, Passager
 
 def get_tous_les_sieges(bus):
     """
-    Génère la liste de tous les numéros de sièges à partir de plan_sieges,
-    ex: {"rangees": 10, "colonnes": ["A","B","C","D"]} -> ["1A","1B","1C","1D","2A",...]
+    Génère les numéros de sièges dans l'ordre avant → arrière, colonne par colonne
+    (chaque colonne = une position du bus dans sa longueur). La colonne avant est
+    réduite (porte avant), la colonne du fond ('banquette') est pleine largeur sans
+    couloir. Numérotation simple, sans préfixe.
     """
     plan = bus.plan_sieges
-    return [
-        f"{rangee}{colonne}"
-        for rangee in range(1, plan['rangees'] + 1)
-        for colonne in plan['colonnes']
-    ]
+    sieges = []
+    numero = 1
+    for colonne in plan['colonnes']:
+        for _ in range(colonne['nb_sieges']):
+            sieges.append(str(numero))
+            numero += 1
+    return sieges
 
 
 def get_sieges_occupes(voyage):
-    """
-    Sièges considérés indisponibles pour un voyage : ceux liés à une réservation
-    confirmée, ou en attente de paiement mais pas encore expirée.
-    """
     reservations_actives = Reservation.objects.filter(voyage=voyage).exclude(
         statut__in=[Reservation.STATUT_ANNULEE, Reservation.STATUT_EXPIREE]
     )
@@ -30,12 +30,31 @@ def get_sieges_occupes(voyage):
 def get_sieges_disponibles(voyage):
     tous = set(get_tous_les_sieges(voyage.bus))
     occupes = get_sieges_occupes(voyage)
-    return sorted(tous - occupes)
+    return sorted(tous - occupes, key=int)
 
 
 def plan_sieges_avec_statut(voyage):
+    """
+    Retourne le plan groupé par colonne (avant → arrière), avec le statut de chaque
+    siège et les marqueurs de sortie/banquette pour l'affichage.
+    """
+    plan = voyage.bus.plan_sieges
     occupes = get_sieges_occupes(voyage)
-    return [
-        {'numero': s, 'statut': 'occupe' if s in occupes else 'libre'}
-        for s in get_tous_les_sieges(voyage.bus)
-    ]
+    colonnes = []
+    numero = 1
+
+    for index, colonne in enumerate(plan['colonnes']):
+        sieges = []
+        for _ in range(colonne['nb_sieges']):
+            s = str(numero)
+            sieges.append({'numero': s, 'statut': 'occupe' if s in occupes else 'libre'})
+            numero += 1
+        colonnes.append({
+            'index': index,
+            'sieges': sieges,
+            'sortie_devant': colonne.get('sortie_devant', False),
+            'sortie_centrale': colonne.get('sortie_centrale', False),
+            'banquette': colonne.get('banquette', False),
+        })
+
+    return colonnes

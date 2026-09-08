@@ -76,7 +76,7 @@ def assigner_bus(jour, heures_aller, heures_retour, duree_trajet, bus_liste, vil
         # 3. Un bus présent mais encore dans sa fenêtre de rotation minimale (on le
         #    réutilise un peu en avance plutôt que de laisser le créneau sans bus).
         if candidat is None and presents:
-            candidat = min(presents, key=lambda b: etat[b.id]['disponible'][0] if etat[b.id]['disponible'] else depart),
+            candidat = min(presents, key=lambda b: etat[b.id]['disponible'][0] if etat[b.id]['disponible'] else depart)
             nb_violations += 1
 
         # 4. Dernier recours : aucun bus n'est physiquement dans la bonne ville (flotte
@@ -84,7 +84,7 @@ def assigner_bus(jour, heures_aller, heures_retour, duree_trajet, bus_liste, vil
         #    disponible, à signaler impérativement à l'admin comme trajet à couvrir
         #    par un renfort réel.
         if candidat is None:
-            candidat = min(bus_liste, key=lambda b: etat[b.id]['disponible'][0] if etat[b.id]['disponible'] else depart),
+            candidat = min(bus_liste, key=lambda b: etat[b.id]['disponible'][0] if etat[b.id]['disponible'] else depart)
             nb_violations += 1
 
         if direction == 'aller':

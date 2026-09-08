@@ -40,9 +40,29 @@ export interface Siege {
   statut: 'libre' | 'occupe';
 }
 
+export interface SiegeAffiche {
+  numero: string;
+  statut: 'libre' | 'occupe';
+}
+
+export interface Rangee {
+  numero: number;
+  type: 'standard' | 'sortie' | 'fond';
+  sieges: SiegeAffiche[];
+}
+
+export interface Colonne {
+  index: number;
+  lettre: string;
+  sieges: Siege[];
+  sortie_devant?: boolean;
+  sortie_centrale?: boolean;
+  banquette?: boolean;
+}
+
 export interface PlanSieges {
   voyage_id: number;
-  sieges: Siege[];
+  colonnes: Colonne[];
 }
 
 export interface PassagerInput {

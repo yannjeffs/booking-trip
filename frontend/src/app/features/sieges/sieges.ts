@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { VoyageService } from '../../core/services/voyage.service';
 import { ReservationService } from '../../core/services/reservation.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Siege, PassagerInput, TypeBillet, ProgrammeFidelite } from '../../core/models/models';
+import { Siege, PassagerInput, TypeBillet, ProgrammeFidelite, Colonne } from '../../core/models/models';
 
 @Component({
   selector: 'app-sieges',
@@ -23,11 +23,12 @@ export class Sieges implements OnInit {
   voyageId!: number;
   voyageRetourId: number | null = null;
   type: TypeBillet = 'aller_simple';
-
   siegesAller: Siege[] = [];
   siegesAllerSelectionnes: string[] = [];
   siegesRetour: Siege[] = [];
   siegesRetourSelectionnes: string[] = [];
+  colonnesAller: Colonne[] = [];
+  colonnesRetour: Colonne[] = [];
 
   chargement = true;
   envoiEnCours = false;
@@ -47,17 +48,17 @@ export class Sieges implements OnInit {
 
     this.voyageService.getPlanSieges(this.voyageId).subscribe({
       next: (reponse) => {
-        this.siegesAller = reponse.sieges;
+        this.colonnesAller = reponse.colonnes;
         if (this.voyageRetourId) {
           this.voyageService.getPlanSieges(this.voyageRetourId).subscribe({
-            next: (r2) => { this.siegesRetour = r2.sieges; this.chargement = false; },
-            error: () => (this.chargement = false),
+            next: (r2) => { this.colonnesRetour = r2.colonnes; this.chargement = false; },
+            error: () => { this.erreur = 'Impossible de charger les sièges du retour.'; this.chargement = false; },
           });
         } else {
           this.chargement = false;
         }
       },
-      error: () => (this.chargement = false),
+      error: () => { this.erreur = 'Impossible de charger les sièges de l’aller.'; this.chargement = false; },
     });
 
     if (this.auth.estConnecte()) {
@@ -68,6 +69,15 @@ export class Sieges implements OnInit {
   get creditDisponible(): number {
     if (!this.fidelite) return 0;
     return this.type === 'aller_simple' ? this.fidelite.credits_aller_simple : this.fidelite.credits_aller_retour;
+  }
+
+  milieu(colonne: Colonne): number {
+    return Math.ceil(colonne.sieges.length / 2);
+  }
+
+  estSelectionne(numero: string, trajet: 'aller' | 'retour'): boolean {
+    const selection = trajet === 'aller' ? this.siegesAllerSelectionnes : this.siegesRetourSelectionnes;
+    return selection.includes(numero);
   }
 
   basculerSiegeAller(siege: Siege): void {

@@ -47,7 +47,7 @@ class Command(BaseCommand):
 
         destinations = self._creer_destinations()
         classes = self._creer_classes()
-        bus_par_classe, bus_ponctuels = self._creer_bus(classes)
+        bus_ponctuels = self._creer_bus(classes)
         trajets = self._creer_trajets(destinations)
         self._creer_horaires_axe_yaounde_douala(trajets, classes)
         self._generer_voyages()
@@ -79,26 +79,43 @@ class Command(BaseCommand):
 
     def _creer_bus(self, classes):
         """
-        Nombre de bus par classe calculé pour couvrir la grille horaire Yaoundé<->Douala
-        sans violation de la fenêtre de rotation (1h30-3h après arrivée) : 8 pour les
-        classes haut de gamme (VIP/Premium, départs toutes les 1h30), 10 pour les
-        classes standard (Classique/Confort, départs toutes les heures).
+        2 bus par classe. Disposition avant->arrière : colonne avant réduite (porte
+        avant), colonnes standards 2+2 (ou 3+2 pour Classique) avec une sortie centrale
+        marquée au milieu, banquette pleine largeur au fond.
         """
-        plan_confort = {'rangees': 10, 'colonnes': ['A', 'B', 'C', 'D']}  # 40 places, 2+2
-        plan_vip = {'rangees': 8, 'colonnes': ['A', 'B', 'C']}            # 24 places, 2+1
+        def plan_2_plus_2(nb_colonnes_standard, nb_sieges_fond, nb_sieges_avant=2):
+            idx_sortie = nb_colonnes_standard // 2
+            return {
+                'colonnes': (
+                    [{'nb_sieges': nb_sieges_avant, 'sortie_devant': True}]
+                    + [{'nb_sieges': 4, 'sortie_centrale': (i == idx_sortie)} for i in range(nb_colonnes_standard)]
+                    + [{'nb_sieges': nb_sieges_fond, 'banquette': True}]
+                )
+            }
+
+        PLAN_VIP_PREMIUM = plan_2_plus_2(nb_colonnes_standard=10, nb_sieges_fond=6)   # 2+40+6=48
+        PLAN_CONFORT = plan_2_plus_2(nb_colonnes_standard=15, nb_sieges_fond=8)        # 2+60+8=70
+        PLAN_CLASSIQUE = {
+            'colonnes': (
+                [{'nb_sieges': 3, 'sortie_devant': True}]
+                + [{'nb_sieges': 5, 'sortie_centrale': (i == 5)} for i in range(12)]
+                + [{'nb_sieges': 7, 'banquette': True}]
+            )
+        }  # 3+60+7=70
+
         specs_par_classe = {
-            'Classique': (plan_confort, 40, 10),
-            'Confort': (plan_confort, 40, 10),
-            'Premium': (plan_vip, 24, 8),
-            'VIP': (plan_vip, 24, 8),
+            'Classique': (PLAN_CLASSIQUE, 70),
+            'Confort': (PLAN_CONFORT, 70),
+            'Premium': (PLAN_VIP_PREMIUM, 48),
+            'VIP': (PLAN_VIP_PREMIUM, 48),
         }
         prefixes = {'Classique': 'CX-1', 'Confort': 'CX-2', 'Premium': 'CX-3', 'VIP': 'CX-4'}
 
         bus_par_classe = {}
         total = 0
-        for nom_classe, (plan, capacite, nb_bus) in specs_par_classe.items():
+        for nom_classe, (plan, capacite) in specs_par_classe.items():
             bus_liste = []
-            for i in range(1, nb_bus + 1):
+            for i in range(1, 3):
                 immat = f"{prefixes[nom_classe]}{i:02d}"
                 bus, _ = Bus.objects.get_or_create(
                     immatriculation=immat,
@@ -107,28 +124,8 @@ class Command(BaseCommand):
                 bus_liste.append(bus)
                 total += 1
             bus_par_classe[nom_classe] = bus_liste
-        self.stdout.write(f"  {total} bus ok (8/classe VIP+Premium, 10/classe Classique+Confort)")
-
-        # Bus dédiés aux trajets ponctuels (Bafoussam, Bamenda) : un pool séparé de
-        # celui de l'axe Yaoundé<->Douala (jamais en conflit avec sa rotation), avec
-        # 2 bus par classe utilisée pour que les deux trajets ponctuels (qui partagent
-        # le même cycle de classes) ne se disputent jamais le même bus.
-        bus_ponctuels = {}
-        for idx, nom_classe in enumerate(['Confort', 'VIP', 'Classique']):
-            plan, capacite = specs_par_classe[nom_classe][0], specs_par_classe[nom_classe][1]
-            bus_liste = []
-            for k in range(2):
-                immat = f"CX-9{idx + 1}{k}"
-                bus, _ = Bus.objects.get_or_create(
-                    immatriculation=immat,
-                    defaults={'capacite': capacite, 'plan_sieges': plan, 'classe': classes[nom_classe]},
-                )
-                bus_liste.append(bus)
-                total += 1
-            bus_ponctuels[nom_classe] = bus_liste
-        self.stdout.write(f"  6 bus dédiés supplémentaires pour les trajets ponctuels ({total} bus au total)")
-
-        return bus_par_classe, bus_ponctuels
+        self.stdout.write(f"  {total} bus ok (48 places VIP/Premium, 70 places Classique/Confort)")
+        return bus_par_classe
 
     def _creer_trajets(self, destinations):
         paires = [

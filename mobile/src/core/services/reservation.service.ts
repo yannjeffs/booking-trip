@@ -21,3 +21,7 @@ export async function getMaFidelite(): Promise<ProgrammeFidelite> {
     return r.data;
 }
 
+export async function mesReservations(): Promise<Reservation[]> {
+    const r = await api.get('/reservations/mes-reservations/');
+    return r.data.results ?? r.data;
+}

@@ -49,3 +49,10 @@ class SiegeSerializer(serializers.Serializer):
     """Représentation d'un siège pour le plan interactif (pas de modèle dédié)."""
     numero = serializers.CharField()
     statut = serializers.ChoiceField(choices=['libre', 'occupe'])
+
+
+class RangeeSiegesSerializer(serializers.Serializer):
+    """Représentation d'une rangée de sièges pour le plan interactif (pas de modèle dédié)."""
+    numero = serializers.IntegerField()
+    type = serializers.ChoiceField(choices=['standard', 'sortie', 'fond'])
+    sieges = serializers.ListField(child=serializers.DictField())

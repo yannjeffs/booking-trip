@@ -1,80 +1,72 @@
-<div class="min-h-screen bg-gray-50">
-  <div class="max-w-md mx-auto px-4 py-8 space-y-4">
+<div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+  <p class="text-base font-medium text-gray-900">Sièges — aller</p>
 
-    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-      <p class="text-base font-medium text-gray-900">Sièges — aller</p>
-      <p class="text-sm text-gray-500 mb-4">Voyage {{ voyageId }}</p>
+  <div class="flex gap-4 text-xs text-gray-500 mb-4 mt-2">
+    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm border border-gray-300 bg-white inline-block"></span> Libre</span>
+    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm inline-block" style="background: var(--color-primary)"></span> Sélectionné</span>
+    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-gray-400 inline-block"></span> Occupé</span>
+  </div>
 
-      <div class="flex gap-4 text-xs text-gray-500 mb-4">
-        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm border border-gray-300 bg-white inline-block"></span> Libre</span>
-        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm inline-block" style="background: var(--color-primary)"></span> Sélectionné</span>
-        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-gray-400 inline-block"></span> Occupé</span>
-      </div>
+  <div class="flex justify-end mb-2 text-xs text-gray-400">→ Avant du bus</div>
 
-      <p *ngIf="chargement" class="text-sm text-gray-400 text-center py-6">Chargement du plan de sièges...</p>
+  <p *ngIf="chargement" class="text-sm text-gray-400">Chargement des sièges...</p>
+  <p *ngIf="erreur" class="text-sm text-red-600">{{ erreur }}</p>
 
-      <div *ngIf="!chargement" class="grid grid-cols-4 gap-2 justify-items-center mb-2">
-        <button *ngFor="let siege of siegesAller" (click)="basculerSiegeAller(siege)" [disabled]="siege.statut === 'occupe'"
-                class="w-9 h-9 text-[10px] rounded-md border transition-colors"
-                [class.bg-white]="siege.statut === 'libre' && !siegesAllerSelectionnes.includes(siege.numero)"
-                [class.border-gray-300]="siege.statut === 'libre' && !siegesAllerSelectionnes.includes(siege.numero)"
-                [class.bg-gray-400]="siege.statut === 'occupe'"
-                [class.text-white]="siege.statut === 'occupe' || siegesAllerSelectionnes.includes(siege.numero)"
-                [style.background]="siegesAllerSelectionnes.includes(siege.numero) ? 'var(--color-primary)' : null">
+  <div *ngIf="!chargement && !erreur" class="flex gap-1.5 overflow-x-auto pb-2">
+    <div *ngFor="let colonne of colonnesAller" class="flex flex-col items-center">
+      <div class="flex flex-col gap-1" [class.gap-3]="!colonne.banquette">
+        <button
+          *ngFor="let siege of colonne.sieges; let i = index"
+          (click)="basculerSiegeAller(siege)"
+          [disabled]="siege.statut === 'occupe'"
+          class="w-8 h-8 text-[9px] rounded-md border transition-colors"
+          [class.mt-3]="!colonne.banquette && i === milieu(colonne)"
+          [class.bg-white]="siege.statut === 'libre' && !estSelectionne(siege.numero, 'aller')"
+          [class.border-gray-300]="siege.statut === 'libre' && !estSelectionne(siege.numero, 'aller')"
+          [class.bg-gray-400]="siege.statut === 'occupe'"
+          [class.text-white]="siege.statut === 'occupe' || estSelectionne(siege.numero, 'aller')"
+          [style.background]="estSelectionne(siege.numero, 'aller') ? 'var(--color-primary)' : null"
+        >
           {{ siege.numero }}
         </button>
       </div>
-      <p class="text-xs text-gray-500">Sièges : {{ siegesAllerSelectionnes.join(', ') || '—' }}</p>
+      <span *ngIf="colonne.sortie_centrale" class="text-[8px] text-gray-400 mt-1 [writing-mode:vertical-lr]">Sortie</span>
     </div>
+  </div>
 
-    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm" *ngIf="type === 'aller_retour'">
-      <p class="text-base font-medium text-gray-900 mb-1">Sièges — retour</p>
-      <p class="text-xs text-gray-500 mb-4">Choisissez le même nombre de sièges qu'à l'aller ({{ siegesAllerSelectionnes.length }})</p>
-
-      <div class="grid grid-cols-4 gap-2 justify-items-center mb-2">
-        <button *ngFor="let siege of siegesRetour" (click)="basculerSiegeRetour(siege)" [disabled]="siege.statut === 'occupe'"
-                class="w-9 h-9 text-[10px] rounded-md border transition-colors"
-                [class.bg-white]="siege.statut === 'libre' && !siegesRetourSelectionnes.includes(siege.numero)"
-                [class.border-gray-300]="siege.statut === 'libre' && !siegesRetourSelectionnes.includes(siege.numero)"
-                [class.bg-gray-400]="siege.statut === 'occupe'"
-                [class.text-white]="siege.statut === 'occupe' || siegesRetourSelectionnes.includes(siege.numero)"
-                [style.background]="siegesRetourSelectionnes.includes(siege.numero) ? 'var(--color-primary)' : null">
-          {{ siege.numero }}
-        </button>
+  <div *ngIf="!chargement && !erreur && type === 'aller_retour'" class="mt-5 pt-4 border-t border-gray-100">
+    <p class="text-sm font-medium text-gray-900 mb-2">Sièges — retour</p>
+    <div class="flex justify-end mb-2 text-xs text-gray-400">→ Avant du bus</div>
+    <div class="flex gap-1.5 overflow-x-auto pb-2">
+      <div *ngFor="let colonne of colonnesRetour" class="flex flex-col items-center">
+        <div class="flex flex-col gap-1" [class.gap-3]="!colonne.banquette">
+          <button *ngFor="let siege of colonne.sieges; let i = index" (click)="basculerSiegeRetour(siege)"
+                  [disabled]="siege.statut === 'occupe'" class="w-8 h-8 text-[9px] rounded-md border transition-colors"
+                  [class.mt-3]="!colonne.banquette && i === milieu(colonne)"
+                  [class.bg-white]="siege.statut === 'libre' && !estSelectionne(siege.numero, 'retour')"
+                  [class.border-gray-300]="siege.statut === 'libre' && !estSelectionne(siege.numero, 'retour')"
+                  [class.bg-gray-400]="siege.statut === 'occupe'"
+                  [class.text-white]="siege.statut === 'occupe' || estSelectionne(siege.numero, 'retour')"
+                  [style.background]="estSelectionne(siege.numero, 'retour') ? 'var(--color-primary)' : null">
+            {{ siege.numero }}
+          </button>
+        </div>
+        <span *ngIf="colonne.sortie_centrale" class="text-[8px] text-gray-400 mt-1 [writing-mode:vertical-lr]">Sortie</span>
       </div>
-      <p class="text-xs text-gray-500">Sièges : {{ siegesRetourSelectionnes.join(', ') || '—' }}</p>
     </div>
+  </div>
 
-    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-      <p class="text-sm font-medium text-gray-900 mb-3">Finaliser</p>
-
-      <div class="flex bg-gray-100 rounded-lg p-1 mb-4 text-sm">
-        <button (click)="payerMaintenant = true" class="flex-1 py-1.5 rounded-md font-medium transition-colors"
-                [class.bg-white]="payerMaintenant" [class.shadow-sm]="payerMaintenant" [class.text-gray-400]="!payerMaintenant">
-          Acheter maintenant
-        </button>
-        <button (click)="payerMaintenant = false" class="flex-1 py-1.5 rounded-md font-medium transition-colors"
-                [class.bg-white]="!payerMaintenant" [class.shadow-sm]="!payerMaintenant" [class.text-gray-400]="payerMaintenant">
-          Réserver (payer plus tard)
-        </button>
-      </div>
-      <p class="text-xs text-gray-400 mb-4" *ngIf="!payerMaintenant">
-        Un code vous sera fourni pour finaliser l'achat avant l'expiration de la réservation.
-      </p>
-
-      <label *ngIf="creditDisponible > 0" class="flex items-center gap-2 mb-4 text-sm bg-green-50 border border-green-200 rounded-lg px-3 py-2.5 cursor-pointer">
-        <input type="checkbox" [(ngModel)]="utiliserCreditFidelite" />
-        <span class="text-green-800">
-          <i class="ti ti-gift mr-1"></i> Utiliser mon billet fidélité gratuit ({{ creditDisponible }} disponible{{ creditDisponible > 1 ? 's' : '' }})
-        </span>
-      </label>
-
-      <p *ngIf="erreur" class="text-sm text-red-600 mb-3">{{ erreur }}</p>
-
-      <button (click)="continuer()" [disabled]="!pretAContinuer || envoiEnCours"
-              class="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] disabled:opacity-40 text-white font-medium rounded-lg py-2.5 transition-colors">
-        {{ envoiEnCours ? 'Envoi...' : 'Continuer' }} <i class="ti ti-arrow-right ml-1"></i>
-      </button>
-    </div>
+  <div *ngIf="!chargement && !erreur" class="mt-5 pt-4 border-t border-gray-100 space-y-3">
+    <label class="flex items-center gap-2 text-sm text-gray-700">
+      <input type="checkbox" [(ngModel)]="payerMaintenant" /> Payer maintenant
+    </label>
+    <label *ngIf="fidelite && creditDisponible > 0" class="flex items-center gap-2 text-sm text-gray-700">
+      <input type="checkbox" [(ngModel)]="utiliserCreditFidelite" /> Utiliser mon crédit fidélité ({{ creditDisponible }})
+    </label>
+    <button type="button" (click)="continuer()" [disabled]="!pretAContinuer || envoiEnCours"
+            class="w-full rounded-lg px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+            style="background: var(--color-primary)">
+      {{ envoiEnCours ? 'Traitement...' : 'Continuer' }}
+    </button>
   </div>
 </div>

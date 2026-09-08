@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getPlanSieges } from '../../../core/services/voyage.service';
 import { creerReservation, getMaFidelite } from '../../../core/services/reservation.service';
 import { useAuth } from '../../../core/context/auth-context';
-import { Siege, PassagerInput, TypeBillet, ProgrammeFidelite } from '../../../core/models/models';
+import { Siege, RangeeSieges, PassagerInput, TypeBillet, ProgrammeFidelite } from '../../../core/models/models';
 
 export default function EcranSieges() {
   const router = useRouter();
@@ -15,9 +15,9 @@ export default function EcranSieges() {
   const type = (params.type as TypeBillet) ?? 'aller_simple';
   const voyageRetourId = params.retour ? Number(params.retour) : null;
 
-  const [siegesAller, setSiegesAller] = useState<Siege[]>([]);
+  const [siegesAller, setSiegesAller] = useState<RangeeSieges[]>([]);
   const [siegesAllerSelectionnes, setSiegesAllerSelectionnes] = useState<string[]>([]);
-  const [siegesRetour, setSiegesRetour] = useState<Siege[]>([]);
+  const [siegesRetour, setSiegesRetour] = useState<RangeeSieges[]>([]);
   const [siegesRetourSelectionnes, setSiegesRetourSelectionnes] = useState<string[]>([]);
 
   const [chargement, setChargement] = useState(true);
@@ -34,10 +34,10 @@ export default function EcranSieges() {
     (async () => {
       try {
         const planAller = await getPlanSieges(voyageId);
-        setSiegesAller(planAller.sieges);
+        setSiegesAller(planAller.rangees);
         if (voyageRetourId) {
           const planRetour = await getPlanSieges(voyageRetourId);
-          setSiegesRetour(planRetour.sieges);
+          setSiegesRetour(planRetour.rangees);
         }
       } finally {
         setChargement(false);
@@ -134,13 +134,13 @@ export default function EcranSieges() {
 
   return (
     <ScrollView className="flex-1 bg-gray-50" contentContainerStyle={{ padding: 16, paddingTop: 60, paddingBottom: 40 }}>
-      <GrilleSieges titre="Sièges — aller" sieges={siegesAller} selectionnes={siegesAllerSelectionnes} onToggle={basculerSiegeAller} />
+      <GrilleSieges titre="Sièges — aller" rangees={siegesAller} selectionnes={siegesAllerSelectionnes} onToggle={basculerSiegeAller} />
 
       {type === 'aller_retour' && (
         <GrilleSieges
           titre="Sièges — retour"
           sousTitre={`Choisissez le même nombre de sièges qu'à l'aller (${siegesAllerSelectionnes.length})`}
-          sieges={siegesRetour}
+          rangees={siegesRetour}
           selectionnes={siegesRetourSelectionnes}
           onToggle={basculerSiegeRetour}
         />
@@ -198,9 +198,9 @@ export default function EcranSieges() {
 }
 
 function GrilleSieges({
-  titre, sousTitre, sieges, selectionnes, onToggle,
+  titre, sousTitre, rangees, selectionnes, onToggle,
 }: {
-  titre: string; sousTitre?: string; sieges: Siege[]; selectionnes: string[]; onToggle: (s: Siege) => void;
+  titre: string; sousTitre?: string; rangees: RangeeSieges[]; selectionnes: string[]; onToggle: (s: Siege) => void;
 }) {
   return (
     <View className="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
@@ -213,26 +213,39 @@ function GrilleSieges({
         <Legende couleur="#9ca3af" label="Occupé" />
       </View>
 
-      <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-        {sieges.map((siege) => {
-          const occupe = siege.statut === 'occupe';
-          const selectionne = selectionnes.includes(siege.numero);
-          return (
-            <TouchableOpacity
-              key={siege.numero}
-              disabled={occupe}
-              onPress={() => onToggle(siege)}
-              className="w-9 h-9 rounded-md border items-center justify-center"
-              style={{
-                backgroundColor: occupe ? '#9ca3af' : selectionne ? '#D80010' : '#fff',
-                borderColor: occupe || selectionne ? 'transparent' : '#d1d5db',
-              }}
-            >
-              <Text className={`text-[10px] ${occupe || selectionne ? 'text-white' : 'text-gray-700'}`}>{siege.numero}</Text>
-            </TouchableOpacity>
-          );
-        })}
+      <View className="items-end mb-2">
+        <Text className="text-xs text-gray-400">🚪 Sortie avant</Text>
       </View>
+
+      {rangees.map((rangee) => (
+        <View key={rangee.numero}>
+          {rangee.type === 'sortie' && (
+            <View className="items-end mb-1">
+              <Text className="text-xs text-gray-400">🚪 Sortie centrale/arrière</Text>
+            </View>
+          )}
+          <View className="flex-row justify-center mb-1.5" style={{ gap: 8 }}>
+            {rangee.sieges.map((siege) => {
+              const occupe = siege.statut === 'occupe';
+              const selectionne = selectionnes.includes(siege.numero);
+              return (
+                <TouchableOpacity
+                  key={siege.numero}
+                  disabled={occupe}
+                  onPress={() => onToggle(siege)}
+                  className="w-9 h-9 rounded-md border items-center justify-center"
+                  style={{
+                    backgroundColor: occupe ? '#9ca3af' : selectionne ? '#D80010' : '#fff',
+                    borderColor: occupe || selectionne ? 'transparent' : '#d1d5db',
+                  }}
+                >
+                  <Text className={`text-[10px] ${occupe || selectionne ? 'text-white' : 'text-gray-700'}`}>{siege.numero}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      ))}
 
       <Text className="text-xs text-gray-500 mt-3">Sièges : {selectionnes.join(', ') || '—'}</Text>
     </View>
